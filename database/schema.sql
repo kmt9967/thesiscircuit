@@ -40,4 +40,9 @@ alter table public.risk_decisions enable row level security;
 alter table public.replay_events enable row level security;
 
 -- No public policies are created in Phase 0. Backend service-role access only.
-
+grant select, insert, update, delete on
+  public.analysis_runs,
+  public.agent_votes,
+  public.risk_decisions,
+  public.replay_events
+to service_role;

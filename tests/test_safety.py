@@ -10,6 +10,9 @@ def test_defaults_are_paper_only() -> None:
     settings = Settings(_env_file=None)
     assert str(settings.alpaca_paper_base_url).rstrip("/") == PAPER_BASE_URL
     assert settings.live_trading_allowed is False
+    assert settings.execution_enabled is False
+    assert settings.allow_live_trading is False
+    assert settings.alpaca_paper_trade is True
     assert settings.order_submission_enabled is False
     assert settings.alpaca_competition_starting_balance == 100_000
 
@@ -20,6 +23,9 @@ def test_defaults_are_paper_only() -> None:
         ("ALPACA_PAPER_BASE_URL", "https://" + "api.alpaca.markets"),
         ("LIVE_TRADING_ALLOWED", "true"),
         ("ORDER_SUBMISSION_ENABLED", "true"),
+        ("EXECUTION_ENABLED", "true"),
+        ("ALLOW_LIVE_TRADING", "true"),
+        ("ALPACA_PAPER_TRADE", "false"),
         ("ALPACA_COMPETITION_STARTING_BALANCE", "99999"),
     ],
 )

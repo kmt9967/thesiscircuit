@@ -10,7 +10,7 @@ Create a dedicated ThesisCircuit project. Apply `database/schema.sql`. Keep RLS 
 
 ## Railway
 
-Deploy the repository with `backend/Dockerfile`. Configure health check `/health`. Add only paper Alpaca and server-side Supabase secrets. Set `TRADING_MODE=paper`, `LIVE_TRADING_ALLOWED=false`, and `ORDER_SUBMISSION_ENABLED=false` as explicit environment values.
+Deploy the repository with `backend/Dockerfile`. Configure health check `/health`. Add only paper Alpaca and server-side Supabase secrets. Set `TRADING_MODE=paper`, `EXECUTION_ENABLED=false`, `ALLOW_LIVE_TRADING=false`, `ALPACA_PAPER_TRADE=true`, `LIVE_TRADING_ALLOWED=false`, and `ORDER_SUBMISSION_ENABLED=false` as explicit environment values.
 
 ## Vercel
 
@@ -19,4 +19,3 @@ Import the GitHub repository with root directory `frontend`. Set only `NEXT_PUBL
 ## GitHub
 
 Create a public MIT-licensed repository named `thesiscircuit`, protect `main` when available, and open a single Phase 0 PR from `feat/phase-0-foundation`. Never commit `.env`, `.vercel`, account IDs, or evidence containing secrets.
-
