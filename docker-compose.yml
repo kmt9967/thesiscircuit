@@ -1,0 +1,24 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    env_file:
+      - .env
+    environment:
+      TRADING_MODE: paper
+      LIVE_TRADING_ALLOWED: "false"
+      ORDER_SUBMISSION_ENABLED: "false"
+    ports:
+      - "8000:8000"
+
+  frontend:
+    build:
+      context: frontend
+    environment:
+      NEXT_PUBLIC_API_BASE_URL: http://api:8000
+    ports:
+      - "3000:3000"
+    depends_on:
+      - api
+
