@@ -11,9 +11,12 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
     trading_mode: Literal["paper"] = "paper"
-    execution_enabled: Literal[False] = False
-    allow_live_trading: Literal[False] = False
-    alpaca_paper_trade: Literal[True] = True
+    # Use bool here so pydantic-settings can parse the string values supplied by
+    # deployment platforms. The model validator below still rejects every
+    # unsafe value after parsing.
+    execution_enabled: bool = False
+    allow_live_trading: bool = False
+    alpaca_paper_trade: bool = True
     alpaca_paper_base_url: AnyHttpUrl = PAPER_BASE_URL
     alpaca_paper_api_key: SecretStr | None = None
     alpaca_paper_api_secret: SecretStr | None = None

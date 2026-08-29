@@ -17,6 +17,18 @@ def test_defaults_are_paper_only() -> None:
     assert settings.alpaca_competition_starting_balance == 100_000
 
 
+def test_safe_environment_strings_are_parsed(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("EXECUTION_ENABLED", "false")
+    monkeypatch.setenv("ALLOW_LIVE_TRADING", "false")
+    monkeypatch.setenv("ALPACA_PAPER_TRADE", "true")
+
+    settings = Settings(_env_file=None)
+
+    assert settings.execution_enabled is False
+    assert settings.allow_live_trading is False
+    assert settings.alpaca_paper_trade is True
+
+
 @pytest.mark.parametrize(
     ("field", "value"),
     [
