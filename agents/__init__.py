@@ -1,0 +1,2 @@
+"""Auditable analyst-agent primitives."""
+
