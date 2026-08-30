@@ -91,6 +91,14 @@ class AccountService(AlpacaClient):
         )
         return data if isinstance(data, list) else []
 
+    async def all_orders(self) -> list[dict[str, Any]]:
+        data = await self._get(
+            self.paper_base,
+            "/v2/orders",
+            {"status": "all", "limit": 500, "nested": "true", "direction": "asc"},
+        )
+        return data if isinstance(data, list) else []
+
 
 class MarketDataService(AlpacaClient):
     async def asset(self, symbol: str) -> AssetSnapshot:

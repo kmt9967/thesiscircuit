@@ -73,6 +73,7 @@ async def integrations() -> dict[str, object]:
         async with AccountService(settings) as service:
             account = await service.account()
             orders = await service.open_orders()
+            all_orders = await service.all_orders()
             result["alpaca"] = {
                 "configured": True,
                 "connected": True,
@@ -80,6 +81,7 @@ async def integrations() -> dict[str, object]:
                 "account_status": account.status,
                 "starting_cash": account.cash,
                 "open_orders": len(orders),
+                "orders_placed": len(all_orders),
             }
     except (AlpacaError, RuntimeError):
         pass
@@ -151,11 +153,14 @@ async def _build_preflight() -> Phase1Preflight:
 async def phase1_account() -> dict[str, Any]:
     try:
         async with AccountService(settings) as service:
+            open_orders = await service.open_orders()
+            all_orders = await service.all_orders()
             return {
                 "account": (await service.account()).model_dump(mode="json"),
                 "clock": (await service.clock()).model_dump(mode="json"),
                 "positions": await service.positions(),
-                "open_orders": await service.open_orders(),
+                "open_orders": open_orders,
+                "orders_placed": len(all_orders),
                 "paper": True,
             }
     except AlpacaError as exc:
