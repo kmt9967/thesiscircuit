@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Any
 
 import httpx
@@ -119,10 +119,16 @@ class MarketDataService(AlpacaClient):
         )
 
     async def bars(self, symbol: str) -> list[dict[str, Any]]:
+        start = datetime.now(timezone.utc) - timedelta(days=45)
         data = await self._get(
             self.data_base,
             f"/v2/stocks/{symbol}/bars",
-            {"timeframe": "1Day", "limit": 20, "feed": "iex"},
+            {
+                "timeframe": "1Day",
+                "start": start.isoformat().replace("+00:00", "Z"),
+                "limit": 20,
+                "feed": "iex",
+            },
         )
         bars = data.get("bars") or []
         return bars if isinstance(bars, list) else []
