@@ -9,9 +9,10 @@ def test_health_discloses_disabled_orders() -> None:
     assert client.get("/health").json() == {"status": "ok", "mode": "paper", "orders": "disabled"}
 
 
-def test_no_order_route_exists() -> None:
-    paths = set(app.openapi()["paths"])
-    assert not any("order" in path.lower() or "trade" in path.lower() for path in paths)
+def test_execution_disabled_rejects_order_before_external_calls() -> None:
+    response = client.post("/phase1/execute")
+    assert response.status_code == 423
+    assert response.json()["detail"] == "EXECUTION_ENABLED is false"
 
 
 def test_safe_thesis_is_research_only() -> None:

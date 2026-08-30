@@ -1,16 +1,23 @@
 # ThesisCircuit
 
-ThesisCircuit is a paper-only autonomous options research system for the Alpaca AI Trading Agents Hackathon. A committee of research agents produces a trade thesis, a deterministic risk governor can veto it, and the full decision can be replayed for judges. Phase 0 deliberately contains **no order-placement path** and places **zero trades**.
+ThesisCircuit is a paper-only autonomous options research system for the Alpaca AI Trading Agents Hackathon. A committee of research agents produces a trade thesis, a deterministic risk governor can veto it, and the full decision can be replayed for judges.
+
+## Phase 1 controlled execution
+
+Phase 1 adds a deliberately narrow proof path: real Alpaca market data → one deterministic long-call proposal → 17 fail-closed risk gates → one idempotent Alpaca PAPER order → Supabase audit → live dashboard. The order path is disabled by default, requires a server-only authorization token, accepts SPY only, limits size to one contract and simulated maximum loss to $250, and never submits a closing order.
+
+The official judging-account window begins August 31, 2026 at 9:30 a.m. ET. Before that timestamp, the hackathon-rules gate rejects execution even if every other configuration is valid.
 
 ## Safety contract
 
 - Alpaca paper trading only; `https://paper-api.alpaca.markets` is the only accepted broker base URL.
-- `LIVE_TRADING_ALLOWED=false` and `ORDER_SUBMISSION_ENABLED=false` are mandatory.
+- `ALLOW_LIVE_TRADING=false` and `LIVE_TRADING_ALLOWED=false` are mandatory.
+- `EXECUTION_ENABLED=false` is the resting state before and after the one authorized proof.
 - Options ideas are analysis artifacts, not investment advice.
 - Paper results are hypothetical and do not guarantee future results.
 - A fresh Alpaca paper account with a $100,000 starting balance is required for final judging; credentials are never committed.
 
-See [PAPER-TRADING-DISCLOSURE.md](PAPER-TRADING-DISCLOSURE.md), [SECURITY.md](SECURITY.md), and [docs/OFFICIAL-RULES.md](docs/OFFICIAL-RULES.md).
+See [PAPER-TRADING-DISCLOSURE.md](PAPER-TRADING-DISCLOSURE.md), [SECURITY.md](SECURITY.md), and [docs/HACKATHON-RULES.md](docs/HACKATHON-RULES.md).
 
 ## Local development
 

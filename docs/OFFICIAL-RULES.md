@@ -1,6 +1,6 @@
 # Official Rules Snapshot
 
-Reviewed on 2026-08-28 PKT from the official Lablab event page, Lablab Hackathon Rule Book, participation terms, and the event-specific LABLAB.AI Discord channels.
+Reviewed initially on 2026-08-28 PKT. The current execution-critical snapshot now lives in `docs/HACKATHON-RULES.md` and was rechecked on 2026-08-30 against the new official Alpaca FAQ.
 
 ## Event-specific requirements
 
@@ -43,7 +43,7 @@ Reviewed on 2026-08-28 PKT from the official Lablab event page, Lablab Hackathon
 
 ## Official Discord findings
 
-- `official-updates-alpaca-ai-trading-agents-hackathon`: one pinned disclosure; no technical-rule amendment observed.
+- `official-updates-alpaca-ai-trading-agents-hackathon`: a new official Alpaca FAQ was posted and pinned on August 28. It defines the P&L window, total-equity judging, permitted data feeds, and MCP/CLI/SDK guidance.
 - `updates-alpaca-ai-trading-agents-hackathon`: kickoff and Discord Q&A timing; no pinned messages.
 - Unanswered participant speculation about the trading window, paid data access, and third-party data is **not an official rule** and must not be relied on.
 

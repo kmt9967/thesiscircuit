@@ -16,6 +16,12 @@
 - **Supabase:** append-oriented run, vote, risk-decision, and replay evidence tables with RLS enabled.
 - **Alpaca:** paper account only. Phase 0 has no order submission client.
 
+## Phase 1 execution boundary
+
+`MarketDataService`, `AccountService`, and `OrderService` isolate Alpaca HTTP behavior. A deterministic proposal builder selects a premium-bounded SPY call from real option contracts and quotes. The execution risk engine owns 17 non-overridable gates. `POST /phase1/execute` is one-shot and idempotent by deterministic client order ID and Supabase trace; timeouts query Alpaca by client order ID and are never blindly retried. `POST /phase1/reconcile` reads the existing order and persists actual fill/position state without submitting another order.
+
+The browser receives only `GET /phase1/dashboard`. Broker and database credentials remain in Railway.
+
 ## Trust boundaries
 
 LLM/agent outputs are untrusted proposals. Only typed schemas enter the risk layer. The risk layer is deterministic and fail-closed. Alpaca credentials, Supabase service keys, and deployment tokens never cross into the browser bundle or logs.
