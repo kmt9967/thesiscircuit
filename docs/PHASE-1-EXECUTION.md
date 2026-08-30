@@ -14,9 +14,8 @@ Market/account reads → canonical proposal → 17 risk gates → Supabase propo
 
 ## Current verified result
 
-Implementation and local tests are present. No Phase 1 order has been submitted because the official Alpaca FAQ says the judging account should begin trading on August 31, 2026 at 9:30 a.m. ET. Order, fill, position, and P&L fields remain empty and must not be described as executed until Alpaca reports them.
+Implementation, audit schema, Railway backend, Vercel frontend, and read-only production preflight are verified. The preflight generated `SPY260904C00774000`, one long-call contract with $222 maximum simulated loss, then correctly rejected it because execution was disabled, the weekend quote was stale, the official window had not opened, and the market was closed. No Phase 1 order has been submitted. Order, fill, position, and P&L fields remain empty and must not be described as executed until Alpaca reports them.
 
 ## Limitations
 
 Basic indicative options data may differ from OPRA. A limit order may remain unfilled or be rejected. ThesisCircuit will report actual Alpaca state and will not submit a second opening or closing order automatically.
-

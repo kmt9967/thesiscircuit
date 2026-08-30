@@ -5,6 +5,8 @@
 - Open orders: 0
 - Positions: 0
 - Environment: Alpaca PAPER
-- Observation source: server-side read-only Alpaca API verification from Phase 0; Phase 1 refresh pending deployment.
+- Portfolio value: $100,000
+- Buying power: $400,000
+- Market open: false
+- Observation source: production server-side read-only Alpaca API refresh on 2026-08-30.
 - Sensitive account identifiers: omitted.
-
