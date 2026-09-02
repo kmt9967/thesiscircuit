@@ -32,8 +32,17 @@ and live-endpoint/paper-only audit pass. Frontend lint/typecheck, safety/empty-s
 checks, and production build pass. All work is confined to ThesisCircuit.
 
 One old browser tab recorded an async message-listener/channel error during navigation;
-this is retained as an observation, not silently counted as a clean console. Fresh-tab
-verification is recorded at handoff. No token or other secret appeared in its output.
+this is retained as an observation, not silently counted as a clean console. A fresh
+Chrome tab on the completed production deployment showed **zero errors/warnings**,
+the actual FILLED order, snapshot timestamps, and the correct refreshed readiness time.
+No token or other secret appeared in either output.
+
+Post-deployment checks at 16:31 UTC: Vercel HTTP 200; Railway health healthy and paper;
+frontend/backend CORS HTTP 200 with the exact production frontend origin; effective
+and configured execution both false. Alpaca still reported exactly 1 total order,
+0 open orders, and 1 long contract at $1.84. Backend/frontend CI and Railway/Vercel
+deployment checks for application commit `5ea0d3f` all passed. The repository working
+tree was clean after the application/evidence commit; no older project was modified.
 
 ## CONFIGURED
 
