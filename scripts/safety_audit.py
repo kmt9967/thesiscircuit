@@ -36,10 +36,19 @@ def main() -> None:
         source = path.read_text(encoding="utf-8")
         if any(marker in source for marker in ("OrderService", "submit_order", "close_position", "cancel_order")):
             raise SystemExit(f"Phase 2 has forbidden broker write capability: {path.name}")
+        if "/v2/orders\"" in source and path.name != "order_dispatch.py":
+            raise SystemExit(f"Unexpected Phase 2 broker submission path: {path.name}")
+    dispatch = (ROOT / "backend/app/phase2/order_dispatch.py").read_text(encoding="utf-8")
+    if dispatch.count("self.broker.client.post(") != 1 or '"SUBMITTING"' not in dispatch:
+        raise SystemExit("Expected one durable Phase 2 submission boundary")
+    for name in ("engine.py", "data.py", "order_dry_run.py", "outcomes.py"):
+        source = (ROOT / "backend/app/phase2" / name).read_text(encoding="utf-8")
+        if "PaperOrderDispatcher" in source or "order_dispatch import" in source:
+            raise SystemExit(f"Dry-run/advisory code imported broker capability: {name}")
     api = (ROOT / "backend" / "app" / "main.py").read_text(encoding="utf-8")
     if "PHASE1_RETIRED = True" not in api:
         raise SystemExit("Phase 1 authorization must remain permanently retired")
-    print("Phase 2 capability audit passed: dry-run only; Phase 1 authorization retired.")
+    print("Phase 2 capability audit passed: isolated durable dispatcher; runtime dry-run only; Phase 1 retired.")
 
 
 if __name__ == "__main__":

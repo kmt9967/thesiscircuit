@@ -2,7 +2,8 @@
 
 Current production is research-only. Both EXECUTION_ENABLED and AUTONOMOUS_TRADING_ENABLED
 must remain false. Startup refuses either enabled flag. Phase 1 authorization is retired.
-There is no Phase 2 execution HTTP route, order adapter, frontend toggle, or cron trader.
+There is no Phase 2 execution HTTP route, frontend toggle, or cron trader. Phase 2.5 adds an
+isolated durable broker dispatcher library; no production caller activates it.
 
 `phase2/authorization.py` implements a pure, separately tested future authorization check:
 paper mode, exact paper host, both live flags off, both execution gates on, a distinct
@@ -21,13 +22,13 @@ a later explicit rerun checks durable completion first. SQL caps attempts at two
 Lease release preserves a 60-second cooldown. START/COMPLETED/FAILED/ABANDONED events are
 stored in the new lock table, with no provider exception bodies or credentials.
 Stable batch/sequence IDs and transactional inserts prevent duplicate decisions. These controls
-do not claim broker idempotency: Phase 2 currently cannot submit any broker request.
+remain separate from Phase 2.5's durable per-order claim and at-most-once submission boundary.
 
-Before autonomous execution could be authorized, a separately reviewed dispatcher must add a
-durable per-intent claim and unique client ID, unknown-submission reconciliation before any retry,
-fresh final broker/risk reads, no overlapping dispatch, and explicit opening/closing scope.
-It must never reuse Phase 1's spent claim. Continuous scheduling and restart reconciliation also
-need a bounded authorization duration and total order budget. Merely setting flags is insufficient.
+Phase 2.5 implements durable intents, deterministic client IDs, unknown-submission reconciliation,
+fresh final broker/risk reads and overlap exclusion. It never reuses Phase 1's spent claim.
+See [the dispatch protocol](PHASE-2.5-ORDER-DISPATCH.md). Continuous scheduling/activation still
+needs a bounded authorization duration, total order budget and explicit opening/closing scope.
+Merely setting flags is insufficient, and the current production startup remains dry-run-only.
 
 Recommended initial validation limits: retain all hard ceilings, additionally constrain an
 authorized trial to one opening order, <=$250 premium, then shut down for review. This is an

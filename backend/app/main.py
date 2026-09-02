@@ -30,6 +30,7 @@ settings = get_settings()
 configured_execution_enabled = settings.execution_enabled
 PHASE1_RETIRED = True
 phase2_batch_status: dict[str, Any] = {"status": "not_configured", "execution_enabled": False}
+phase25_status: dict[str, Any] = {"status": "not_configured", "classification": "SYNTHETIC", "broker_calls": 0}
 
 
 @asynccontextmanager
@@ -58,7 +59,22 @@ async def lifespan(app: FastAPI):
             phase2_batch_status.update(status="blocked", error_type=type(exc).__name__)
 
     task = asyncio.create_task(research()) if settings.phase2_dry_run_batch else None
+    async def synthetic_verification():
+        from backend.app.phase2.order_dry_run import run_synthetic_batch
+        from backend.app.phase2.order_intents import OrderIntentService
+        phase25_status["status"] = "running"
+        try:
+            async with OrderIntentService(settings) as repository:
+                result = await run_synthetic_batch(repository,settings,settings.phase25_synthetic_batch)
+            phase25_status.update(result)
+        except (httpx.HTTPError, RuntimeError, ValueError, TypeError, KeyError) as exc:
+            phase25_status.update(status="blocked", error_type=type(exc).__name__)
+    synthetic = asyncio.create_task(synthetic_verification()) if settings.phase25_synthetic_batch else None
     yield
+    if synthetic:
+        synthetic.cancel()
+        with suppress(asyncio.CancelledError):
+            await synthetic
     if task:
         task.cancel()
         with suppress(asyncio.CancelledError):
@@ -119,7 +135,14 @@ async def safety() -> dict[str, object]:
         "phase2_execution_authorized": False,
         "autonomous_trading_enabled": settings.autonomous_trading_enabled,
         "phase2_dispatch_available": False,
+        "phase25_dispatch_implemented": True,
     }
+
+
+@app.get("/phase2/order-dispatch-verification")
+async def order_dispatch_verification() -> dict[str, Any]:
+    """Read-only labelled synthetic verification. Never a submission endpoint."""
+    return phase25_status
 
 
 @app.get("/integrations")
