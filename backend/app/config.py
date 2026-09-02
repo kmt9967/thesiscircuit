@@ -38,6 +38,9 @@ class Settings(BaseSettings):
     phase1_official_start_utc: str = "2026-08-31T13:30:00Z"
     phase1_official_end_utc: str = "2026-09-04T13:30:00Z"
     phase1_execution_token: SecretStr | None = None
+    phase2_dry_run_batch: str = ""
+    phase2_emergency_kill: bool = False
+    phase2_daily_drawdown_fraction: float = Field(default=0.01, gt=0, le=0.01)
 
     @model_validator(mode="after")
     def enforce_paper_only(self) -> "Settings":

@@ -32,6 +32,14 @@ def main() -> None:
     if ".delete(" in source or "cancel_all" in source or "close_position" in source:
         raise SystemExit("Automatic cancel/close behavior is forbidden")
     print("Safety audit passed: paper-only endpoints and one-shot order boundary verified.")
+    for path in (ROOT / "backend" / "app" / "phase2").glob("*.py"):
+        source = path.read_text(encoding="utf-8")
+        if any(marker in source for marker in ("OrderService", "submit_order", "close_position", "cancel_order")):
+            raise SystemExit(f"Phase 2 has forbidden broker write capability: {path.name}")
+    api = (ROOT / "backend" / "app" / "main.py").read_text(encoding="utf-8")
+    if "PHASE1_RETIRED = True" not in api:
+        raise SystemExit("Phase 1 authorization must remain permanently retired")
+    print("Phase 2 capability audit passed: dry-run only; Phase 1 authorization retired.")
 
 
 if __name__ == "__main__":

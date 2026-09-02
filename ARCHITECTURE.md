@@ -1,5 +1,12 @@
 # Architecture
 
+## Phase 2 Part 1
+
+The deployed research path is documented in [Phase 2 architecture](docs/PHASE-2-ARCHITECTURE.md):
+GET-only Alpaca → deterministic features/regime → three competing agents → critic
+→ allocator → independent risk → blocked execution → Supabase counterfactual audit.
+Position recommendations cannot submit closing orders. Phase 1 authorization is retired.
+
 ## Planned multi-agent decision circuit (not activated)
 
 1. Market/research inputs become an immutable `ThesisRequest`.

@@ -18,3 +18,13 @@ assert.match(dashboard, /Account read at/);
 assert.match(dashboard, /eventTime\(event\)/);
 
 console.log("Phase 1 frontend safety and empty-state checks passed.");
+
+const research = readFileSync(new URL("../app/phase2-dashboard.tsx", import.meta.url), "utf8");
+for (const required of ["COUNTERFACTUAL", "EXECUTION DISABLED", "Strategy arena", "Decision council", "Shadow desk", "Position watch", "NO TRADE", "Not measured", "No completed Phase 2 cycle", "not a live price stream", "NOT EXECUTED", "interim, unscored"]) {
+  assert.ok(research.includes(required), `Missing Phase 2 disclosure/state: ${required}`);
+}
+assert.doesNotMatch(research, /PHASE1_EXECUTION_TOKEN|PHASE2_EXECUTION_TOKEN|SUPABASE_SERVICE|method:\s*["']POST/);
+assert.match(research, /phase2\/dashboard/);
+assert.match(research, /AbortController/);
+assert.match(page, /Phase2Dashboard/);
+console.log("Phase 2 research, counterfactual, missing-data and no-execution UI checks passed.");

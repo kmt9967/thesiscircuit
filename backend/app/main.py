@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import asyncio
 import secrets
+from contextlib import asynccontextmanager, suppress
 from datetime import datetime, timezone
 from typing import Any, Literal
 from uuid import UUID
@@ -26,11 +28,46 @@ from risk.governor import evaluate_thesis
 
 settings = get_settings()
 configured_execution_enabled = settings.execution_enabled
+PHASE1_RETIRED = True
+phase2_batch_status: dict[str, Any] = {"status": "not_configured", "execution_enabled": False}
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    from backend.app.phase2.data import ReadOnlyMarketProvider
+    from backend.app.phase2.engine import assert_dry_run, run_batch
+    from backend.app.phase2.policy import Policy
+    from backend.app.phase2.repository import Phase2Repository
+
+    if PHASE1_RETIRED:
+        assert_dry_run(settings)  # Production refuses enabled execution; historical tests isolate v1.
+    async def research():
+        phase2_batch_status["status"] = "running"
+        try:
+            async with Phase2Repository(settings) as repository:
+                ids = await run_batch(
+                    ReadOnlyMarketProvider(settings), repository, settings,
+                    Policy(emergency_kill=settings.phase2_emergency_kill,
+                           daily_drawdown_fraction=settings.phase2_daily_drawdown_fraction),
+                    settings.phase2_dry_run_batch,
+                )
+            phase2_batch_status.update(status="completed", cycle_ids=ids)
+        except (httpx.HTTPError, RuntimeError, ValueError, TypeError, KeyError) as exc:
+            # Never log exception bodies/headers/provider payloads containing server credentials.
+            phase2_batch_status.update(status="blocked", error_type=type(exc).__name__)
+
+    task = asyncio.create_task(research()) if settings.phase2_dry_run_batch else None
+    yield
+    if task:
+        task.cancel()
+        with suppress(asyncio.CancelledError):
+            await task
 
 app = FastAPI(
     title="ThesisCircuit Paper Execution API",
-    version="0.2.0",
-    description="Fail-closed Alpaca PAPER research and one-shot Phase 1 execution.",
+    version="0.3.0",
+    description="Deterministic PAPER options research; Phase 2 Part 1 has no execution authority.",
+    lifespan=lifespan,
 )
 app.add_middleware(
     CORSMiddleware,
@@ -42,6 +79,8 @@ app.add_middleware(
 
 
 async def _execution_enabled() -> bool:
+    if PHASE1_RETIRED:
+        return False
     if not settings.execution_enabled:
         return False
     try:
@@ -74,6 +113,9 @@ async def safety() -> dict[str, object]:
         "order_submission_enabled": enabled,
         "competition_starting_balance": settings.alpaca_competition_starting_balance,
         "one_shot": True,
+        "phase1_authorization_retired": PHASE1_RETIRED,
+        "phase2_mode": "DRY_RUN",
+        "phase2_execution_authorized": False,
     }
 
 
@@ -224,6 +266,8 @@ async def phase1_preflight() -> Phase1Preflight:
 
 
 def _authorize_execution(token: str | None) -> None:
+    if PHASE1_RETIRED:
+        raise HTTPException(status_code=410, detail="Phase 1 execution authorization permanently retired")
     if not settings.execution_enabled:
         raise HTTPException(status_code=423, detail="EXECUTION_ENABLED is false")
     if not settings.phase1_execution_token:
@@ -455,3 +499,20 @@ async def phase1_dashboard() -> DashboardState:
         latest_position=latest_position,
         timeline=timeline,
     )
+
+
+@app.get("/phase2/dashboard")
+async def phase2_dashboard() -> dict[str, Any]:
+    from backend.app.phase2.repository import Phase2Repository
+    try:
+        async with Phase2Repository(settings) as repository:
+            rows = await repository.recent("autonomous_cycles", 5)
+            shadows = await repository.recent("shadow_trades")
+            marks = await repository.recent("shadow_marks", 100)
+        return {"mode": "DRY_RUN", "execution_enabled": False, "database_connected": True,
+                "batch_status": phase2_batch_status, "latest": rows[0]["payload"] if rows else None,
+                "cycles": [{"id": r["id"], "created_at": r["created_at"],
+                            "decision": r["payload"]["decision"]} for r in rows],
+                "shadows": [r["payload"] for r in shadows], "marks": [r["payload"] for r in marks]}
+    except (httpx.HTTPError, ValueError, RuntimeError):
+        raise HTTPException(status_code=503, detail="Phase 2 audit unavailable; execution remains disabled")
