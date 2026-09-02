@@ -260,6 +260,14 @@ def test_no_phase2_broker_write_dependency_and_phase1_retired():
         assert "OrderService" not in text and "submit_order" not in text and "close_position" not in text
     with TestClient(main.app) as client:
         assert client.post("/phase1/execute").status_code == 410
+        assert client.post("/phase1/preflight/readiness").status_code == 410
         assert client.post("/phase1/preflight/execution").status_code == 410
         assert client.post("/phase2/execute").status_code == 404
         assert client.get("/safety").json()["phase2_execution_authorized"] is False
+
+
+def test_nonfinite_account_is_rejected():
+    s = state()
+    s.account.equity = float("inf")
+    result = validate(proposal(), s, Settings(), Policy(), NOW)
+    assert not next(g for g in result.checks if g.name == "account").passed

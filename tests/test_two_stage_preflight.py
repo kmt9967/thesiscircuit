@@ -314,6 +314,7 @@ def test_complete_route_sequence_submits_only_once(monkeypatch):
 
 
 def test_readiness_timeout_returns_a_nonempty_safe_error(monkeypatch):
+    monkeypatch.setattr(main, "PHASE1_RETIRED", False)  # Historical v1 harness only.
     repository = MemoryAudit()
 
     async def timeout(*args):
@@ -328,6 +329,7 @@ def test_readiness_timeout_returns_a_nonempty_safe_error(monkeypatch):
 
 
 def test_readiness_requires_environment_disabled_even_after_local_shutdown(monkeypatch):
+    monkeypatch.setattr(main, "PHASE1_RETIRED", False)  # Historical v1 harness only.
     monkeypatch.setattr(main, "configured_execution_enabled", True)
     monkeypatch.setattr(main, "settings", settings(execution_enabled=False))
     with TestClient(main.app) as client:

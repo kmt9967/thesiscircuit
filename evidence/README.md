@@ -1,5 +1,9 @@
 # Evidence Index
 
+- `phase-2/README.md` — VERIFIED three real-data dry runs, NO_TRADE, shadow and
+  production dashboard; CONFIGURED paper boundaries; separated unmeasured outcomes.
+- `phase-2/recorded-production-dry-runs.json` — sanitized actual persisted Phase2 state.
+
 - `PHASE-0-CHECKLIST.md` — Phase 0 controls and deployment proof.
 - `phase-1/` — sanitized Phase 1 execution-chain evidence.
 - `phase-1/2026-09-02-two-stage-readiness.json` — VERIFIED fresh production readiness,

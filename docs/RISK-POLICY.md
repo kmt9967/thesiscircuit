@@ -1,5 +1,12 @@
 # Phase 1 Risk Policy
 
+## Phase 2 Part 1 supplement
+
+Execution remains disabled. The separate 24-gate research risk officer and limits
+are specified in [Phase 2 architecture](PHASE-2-ARCHITECTURE.md). Existing SPY
+exposure blocks another SPY thesis. EXIT/REDUCE recommendations cannot create
+closing orders. Phase1 authorization is retired, never reused.
+
 The deterministic engine rejects unless all 18 gates pass: paper mode, paper endpoint,
 active dedicated/unblocked options-enabled account, stage-specific execution gate,
 fresh quote, tradable option, one-contract size, sufficient cash/options buying power,

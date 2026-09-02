@@ -1,5 +1,6 @@
 import re
 from datetime import datetime, time, timezone
+from math import isfinite
 from zoneinfo import ZoneInfo
 
 from pydantic import Field
@@ -66,7 +67,9 @@ def validate(proposal: Proposal, state: MarketState, settings: Settings,
          "Exact paper execution host only")
     gate("dry_run_gate", not settings.execution_enabled, "Part 1 requires execution disabled")
     gate("account", a.status == "ACTIVE" and a.expected_account_match and not a.trading_blocked
-         and a.options_trading_level >= 2 and a.equity > 0, "Dedicated active options-enabled account")
+         and a.options_trading_level >= 2 and a.equity > 0
+         and all(isfinite(value) for value in (a.equity, a.cash, a.last_equity, a.buying_power)),
+         "Dedicated active options-enabled account; finite account values")
     gate("competition_window", start <= now < end, "Official competition time bounds")
     gate("market", state.clock.is_open and 0 <= (now - state.clock.timestamp).total_seconds() <= 120,
          "Open market and fresh broker clock")

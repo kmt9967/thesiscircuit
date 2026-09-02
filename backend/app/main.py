@@ -255,6 +255,8 @@ async def phase1_market(symbol: str) -> dict[str, Any]:
 @app.post("/phase1/preflight", response_model=Phase1Preflight)
 @app.post("/phase1/preflight/readiness", response_model=Phase1Preflight)
 async def phase1_preflight() -> Phase1Preflight:
+    if PHASE1_RETIRED:
+        raise HTTPException(status_code=410, detail="Phase 1 preflight retired; historical audit preserved")
     if configured_execution_enabled:
         raise HTTPException(status_code=423, detail="Railway execution must be disabled before readiness")
     try:
@@ -514,5 +516,5 @@ async def phase2_dashboard() -> dict[str, Any]:
                 "cycles": [{"id": r["id"], "created_at": r["created_at"],
                             "decision": r["payload"]["decision"]} for r in rows],
                 "shadows": [r["payload"] for r in shadows], "marks": [r["payload"] for r in marks]}
-    except (httpx.HTTPError, ValueError, RuntimeError):
+    except (httpx.HTTPError, ValueError, TypeError, RuntimeError):
         raise HTTPException(status_code=503, detail="Phase 2 audit unavailable; execution remains disabled")
