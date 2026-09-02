@@ -15,3 +15,9 @@ or increased premium requires disabling execution and restarting readiness. Miss
 timestamps, malformed account lists, and failed duplicate lookups never imply safety.
 
 An LLM cannot approve or override a rejected proposal. ThesisCircuit uses a long call for the first proof because its theoretical loss is bounded by premium paid. Naked short options, uncovered calls, unlimited-risk strategies, market orders, batch orders, and autonomous loops are excluded.
+
+The Phase 1 authorization is now consumed: one order filled September 2 at $1.84,
+after a $1.88 limit/$188 premium bound passed all gates. The resting execution gate
+is false. The existing one-contract position must not be closed, added to, exercised,
+or otherwise managed automatically. Premium-only bounds exclude transaction costs
+and any stock exposure created by expiry exercise; separate user direction is needed.

@@ -1,6 +1,8 @@
 # ThesisCircuit
 
-ThesisCircuit is a paper-only autonomous options research system for the Alpaca AI Trading Agents Hackathon. A committee of research agents produces a trade thesis, a deterministic risk governor can veto it, and the full decision can be replayed for judges.
+ThesisCircuit is a paper-only options research project for the Alpaca AI Trading Agents
+Hackathon. Phase 1 proves a single controlled deterministic execution with an auditable
+risk decision. A multi-agent research committee is planned, not yet activated.
 
 ## Phase 1 controlled execution
 
@@ -65,7 +67,9 @@ npm run build
 
 ## Current phase
 
-Phase 0 is complete. Phase 1 two-stage readiness has been verified in production;
-the single order remains unsubmitted pending server-only execution authorization.
-Execution is disabled. See [docs/PHASE-1-EXECUTION.md](docs/PHASE-1-EXECUTION.md).
+Phase 0 and the Phase 1 controlled execution proof are complete. On September 2,
+one SPY Sep 4 $768 call was submitted with a $1.88 DAY limit and filled at $1.84.
+The one-contract paper position remains open. Execution is disabled, the one-use
+claim is consumed, and no further order or Phase 2 activity is authorized.
+See [docs/PHASE-1-EXECUTION.md](docs/PHASE-1-EXECUTION.md) for the actual audit and limits.
 

@@ -1,6 +1,6 @@
 # Architecture
 
-## Decision circuit
+## Planned multi-agent decision circuit (not activated)
 
 1. Market/research inputs become an immutable `ThesisRequest`.
 2. Independent analyst agents produce structured votes with confidence and evidence labels.
@@ -29,6 +29,11 @@ durable claim disables effective execution across replicas. Railway's environmen
 switch must also be explicitly restored to false.
 
 The browser receives only `GET /phase1/dashboard`. Broker and database credentials remain in Railway.
+
+The September 2 production proof traversed this boundary exactly once: one DAY-limit
+SPY call order filled at Alpaca, then its actual order/fill/position reached Supabase
+and the Vercel UI. Both execution flags are now false and the persistent claim is
+consumed. Account reads and stored position snapshots have distinct timestamps.
 
 ## Trust boundaries
 

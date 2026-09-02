@@ -18,3 +18,7 @@
   position. Alpaca may automatically exercise ITM contracts at expiry. No exercise
   or closing instruction is sent by ThesisCircuit; expiry handling needs separate
   user direction before September 4. See official Alpaca options documentation.
+- Production proof completed September 2: client ID
+  `thesiscircuit-phase1-eeb2ef56-a111-59c2-815e-17bc75fdc270`, one DAY limit at $1.88,
+  actual Alpaca fill at $1.84. The consumed submission claim must never be deleted
+  or reset to rerun the proof. Only read-only broker reconciliation was used afterward.

@@ -1,0 +1,74 @@
+{
+  "classification": "VERIFIED",
+  "paper": true,
+  "backend_execution_commit": "a70a6007b459c99120b4e982a24e63338bf222a8",
+  "trace_id": "eeb2ef56-a111-59c2-815e-17bc75fdc270",
+  "account_before": {
+    "expected_account_match": true, "status": "ACTIVE", "cash": 100000,
+    "equity": 100000, "buying_power": 400000, "options_buying_power": 100000,
+    "orders": 0, "positions": 0, "market_open": true
+  },
+  "readiness": {
+    "at_utc": "2026-09-02T16:18:59.237606Z",
+    "result": "READY_FOR_EXECUTION", "execution_enabled": false,
+    "passed_gates": 18, "failed_gates": 0,
+    "bid": 1.81, "ask": 1.90, "max_premium_risk": 190,
+    "quote_timestamp_utc": "2026-09-02T16:18:58.540499Z"
+  },
+  "execution_preflight": {
+    "at_utc": "2026-09-02T16:21:15.665006Z",
+    "result": "APPROVED_FOR_SINGLE_ORDER", "execution_enabled": true,
+    "passed_gates": 18, "failed_gates": 0,
+    "bid": 1.89, "ask": 1.90, "max_premium_risk": 190,
+    "quote_timestamp_utc": "2026-09-02T16:21:14.330252Z"
+  },
+  "submission_recheck": {
+    "at_utc": "2026-09-02T16:21:18.902860Z",
+    "decision": "APPROVED", "passed_gates": 18, "failed_gates": 0,
+    "bid": 1.87, "ask": 1.88, "max_premium_risk": 188,
+    "quote_timestamp_utc": "2026-09-02T16:21:17.549757Z",
+    "source": "alpaca:indicative"
+  },
+  "exact_order_payload": {
+    "symbol": "SPY260904C00768000", "qty": "1", "side": "buy",
+    "type": "limit", "time_in_force": "day", "limit_price": "1.88",
+    "client_order_id": "thesiscircuit-phase1-eeb2ef56-a111-59c2-815e-17bc75fdc270",
+    "position_intent": "buy_to_open"
+  },
+  "alpaca_order": {
+    "id": "533142b0-7e8c-4c77-ab20-30a764f0fb7e",
+    "submitted_at": "2026-09-02T16:21:20.523115Z",
+    "initial_status": "pending_new", "reconciled_status": "filled",
+    "filled_quantity": 1, "filled_average_price": 1.84,
+    "filled_at": "2026-09-02T16:21:20.626921323Z", "premium_paid": 184
+  },
+  "position_snapshot": {
+    "recorded_at": "2026-09-02T16:23:17.306362Z",
+    "symbol": "SPY260904C00768000", "side": "long", "quantity": 1,
+    "average_entry_price": 1.84, "cost_basis": 184,
+    "market_value": 182, "unrealized_pnl": -2, "left_open": true
+  },
+  "account_observation": {
+    "at_utc": "2026-09-02T16:23:20.935142Z",
+    "cash": 99815.97, "equity": 99997.97, "buying_power": 399263.88,
+    "note": "Point-in-time Alpaca values; marks change. Cash debit minus premium was $0.03; fee breakdown not separately verified."
+  },
+  "supabase": {
+    "connected": true, "proposal_read_back": true, "risk_read_back": true,
+    "decision_write_acknowledged": true, "order_read_back": true,
+    "fill_read_back": true, "position_snapshot_read_back": true,
+    "immutable_claim_present": true, "shutdown_read_back": true,
+    "events": ["readiness_approved", "execution_approved", "submission_claimed",
+      "proposal_created", "risk_approved", "paper_order_submitted",
+      "actual_alpaca_state", "execution_shutdown"]
+  },
+  "final_safety": {
+    "execution_enabled": false, "configured_execution_enabled": false,
+    "allow_live_trading": false, "live_trading_allowed": false,
+    "alpaca_paper_trade": true, "paper_endpoint": "https://paper-api.alpaca.markets",
+    "opening_orders": 1, "additional_orders": 0, "closing_orders": 0,
+    "live_accounts_created": 0, "live_credentials_created": 0,
+    "real_money_transfers": 0, "balance_resets": 0, "credential_exposures": 0
+  },
+  "limits": "Historical paper/simulated evidence, not investment advice. Position remains open; no additional execution authorized."
+}

@@ -15,6 +15,14 @@ const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
 const money = (value: unknown) => typeof value === "number" && Number.isFinite(value) ? `$${value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}` : "—";
 const text = (value: unknown) => typeof value === "string" && value ? value : "—";
 const short = (value: unknown) => typeof value === "string" ? `${value.slice(0, 8)}…${value.slice(-4)}` : "—";
+const eventTime = (event: Record<string, unknown>) => {
+  const payload = event.payload as Record<string, unknown> | undefined;
+  const risk = payload?.risk as Record<string, unknown> | undefined;
+  // Receipt rows can be refreshed before execution; use the actual check time,
+  // not the time the reusable receipt row was first inserted.
+  return text((payload?.stage === "readiness" || payload?.stage === "execution")
+    ? risk?.created_at : event.created_at);
+};
 
 export default function Dashboard() {
   const [state, setState] = useState<State | null>(null);
@@ -54,6 +62,7 @@ export default function Dashboard() {
         <article><small>Buying power</small><strong>{money(state.account?.buying_power)}</strong></article>
         <article><small>Execution</small><strong className={state.execution_enabled ? "danger" : "safe"}>{state.execution_enabled ? "ENABLED" : "DISABLED"}</strong></article>
       </div>
+      <small>Account read at {text(state.generated_at)}. Refresh to load the latest backend state.</small>
     </section>
     <section className="panel">
       <header><div><small>SYSTEM STATUS</small><h2>Fail-closed services</h2></div></header>
@@ -65,7 +74,7 @@ export default function Dashboard() {
       <article className="panel card"><small>LATEST DECISION</small>{proposal ? <><h3>{text(proposal.instrument)}</h3><dl><dt>Strategy</dt><dd>{text(proposal.strategy_type)}</dd><dt>Rationale</dt><dd>{text(proposal.rationale)}</dd><dt>Risk</dt><dd>{text(risk?.decision)}</dd><dt>Timestamp</dt><dd>{text(proposal.created_at)}</dd></dl></> : <div className="empty inner"><strong>No executed proposal</strong><p>No execution proposal is recorded. Readiness approval is not an executed trade.</p></div>}</article>
       <article className="panel card"><small>ORDER</small><span className="badge paper">PAPER</span>{order ? <><h3>{text(order.status).toUpperCase()}</h3><dl><dt>Instrument</dt><dd>{text(order.instrument)}</dd><dt>Quantity</dt><dd>{String(order.quantity ?? "—")}</dd><dt>Fill price</dt><dd>{money(fill?.price ?? order.filled_average_price)}</dd><dt>Reference</dt><dd>{short(order.alpaca_order_id)}</dd></dl></> : <div className="empty inner"><strong>No Alpaca order recorded</strong><p>Only reconciled Alpaca records appear here. Missing audit data is not proof of an empty brokerage account.</p></div>}</article>
     </section>
-    <section className="panel card"><small>POSITION</small>{position ? <dl className="position"><dt>Instrument</dt><dd>{text(position.symbol)}</dd><dt>Quantity</dt><dd>{String(position.qty ?? "—")}</dd><dt>Entry</dt><dd>{money(Number(position.avg_entry_price))}</dd><dt>Current value</dt><dd>{money(Number(position.market_value))}</dd><dt>Unrealized P&amp;L</dt><dd>{money(Number(position.unrealized_pl))}</dd></dl> : <div className="empty inner"><strong>No paper position</strong><p>A real Alpaca-reported position will appear here after the authorized order fills.</p></div>}</section>
-    <section className="panel" id="audit"><header><div><small>AUDIT TIMELINE</small><h2>Decision replay</h2></div></header>{state.timeline.length ? <ol className="timeline">{state.timeline.map((event, index) => <li key={String(event.id ?? index)}><b>{String(index + 1).padStart(2, "0")}</b><span><strong>{text(event.kind).replaceAll("_", " ")}</strong><small>{text(event.created_at)}</small></span></li>)}</ol> : <div className="empty inner"><strong>No execution events yet</strong><p>Proposal → Risk Approved → Paper Order Submitted → Actual Alpaca State will populate only from verified records.</p></div>}</section>
+    <section className="panel card"><small>POSITION</small>{position ? <><dl className="position"><dt>Instrument</dt><dd>{text(position.symbol)}</dd><dt>Quantity</dt><dd>{String(position.qty ?? "—")}</dd><dt>Entry</dt><dd>{money(Number(position.avg_entry_price))}</dd><dt>Snapshot value</dt><dd>{money(Number(position.market_value))}</dd><dt>Unrealized P&amp;L</dt><dd>{money(Number(position.unrealized_pl))}</dd></dl><small>Reconciled position snapshot at {text(positionRecord?.created_at)}. Valuation may differ from a newer account read.</small></> : <div className="empty inner"><strong>No paper position</strong><p>A real Alpaca-reported position will appear here after the authorized order fills.</p></div>}</section>
+    <section className="panel" id="audit"><header><div><small>AUDIT TIMELINE</small><h2>Decision replay</h2></div></header>{state.timeline.length ? <ol className="timeline">{state.timeline.map((event, index) => <li key={String(event.id ?? index)}><b>{String(index + 1).padStart(2, "0")}</b><span><strong>{text(event.kind).replaceAll("_", " ")}</strong><small>{eventTime(event)}</small></span></li>)}</ol> : <div className="empty inner"><strong>No execution events yet</strong><p>Proposal → Risk Approved → Paper Order Submitted → Actual Alpaca State will populate only from verified records.</p></div>}</section>
   </>;
 }

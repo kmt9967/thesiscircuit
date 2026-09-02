@@ -13,5 +13,8 @@ assert.match(dashboard, /No executed proposal/);
 assert.match(dashboard, /Readiness approval is not an executed trade/);
 assert.doesNotMatch(dashboard, /The official trading window has not opened/);
 assert.doesNotMatch(dashboard, /Zero opening orders have been submitted/);
+assert.match(dashboard, /Reconciled position snapshot at/);
+assert.match(dashboard, /Account read at/);
+assert.match(dashboard, /eventTime\(event\)/);
 
 console.log("Phase 1 frontend safety and empty-state checks passed.");
