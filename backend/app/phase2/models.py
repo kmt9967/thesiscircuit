@@ -128,6 +128,7 @@ class MarketState(Record):
     orders: list[OrderRead]
     features: Features | None = None
     options: list[Option] = Field(default_factory=list)
+    observations: list[Option] = Field(default_factory=list)
     data_errors: list[str] = Field(default_factory=list)
 
 
@@ -235,6 +236,9 @@ class ShadowMark(Record):
     rejection_effect: Literal["HELPED", "HURT", "NEUTRAL"]
     horizon_complete: bool
     classification: Literal["COUNTERFACTUAL"] = "COUNTERFACTUAL"
+    source: str = "alpaca:indicative"
+    elapsed_minutes: float | None = None
+    mark_basis: str = "Later observed bid; not an executed fill or exact horizon return"
 
 
 class AgentScore(Record):
@@ -251,6 +255,10 @@ class AgentScore(Record):
     shadow_pnl: float | None = None
     shadow_false_positives: int = 0
     shadow_missed_opportunities: int = 0
+    counterfactual_risk_efficiency: float | None = None
+    counterfactual_false_positive_rate: float | None = None
+    no_trade_quality: float | None = None
+    score_components: dict[str, float | None] = Field(default_factory=dict)
     basis: str
 
 
@@ -267,6 +275,25 @@ class PositionReview(Record):
     recommendation: Literal["HOLD", "REDUCE", "EXIT", "EXPIRED", "RISK_ALERT"]
     reasons: list[str]
     action_authorized: Literal[False] = False
+    quote_fresh: bool = False
+    market_open: bool = False
+    quote_age_seconds: float | None = None
+    mark_basis: str = "Broker-reported position value; underlying quote timestamp not supplied by broker"
+
+
+class ExitProposal(Record):
+    """Advisory only. No execution path is attached to this schema."""
+    id: UUID = Field(default_factory=uuid4)
+    timestamp: AwareDatetime
+    contract: Option
+    quantity: int = Field(ge=1, le=3)
+    side: Literal["sell"] = "sell"
+    position_intent: Literal["sell_to_close"] = "sell_to_close"
+    order_type: Literal["limit"] = "limit"
+    time_in_force: Literal["day"] = "day"
+    limit_price: float = Field(gt=0)
+    rationale: str = Field(min_length=1)
+    execution_authorized: Literal[False] = False
 
 
 class Reflection(Record):

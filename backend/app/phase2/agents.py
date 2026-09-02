@@ -79,6 +79,9 @@ def critique(p: Proposal, state: MarketState, regime: Regime) -> CriticReview:
 def allocate(proposals: list[Proposal], critics: list[CriticReview], state: MarketState,
              regime: Regime, historical_scores: dict[str, float], policy: Policy) -> Allocation:
     scores: dict[str, float] = {}
+    directions = {p.direction for p in proposals if p.status == "PROPOSED"}
+    if len(directions) > 1:
+        return Allocation(decision="NO_TRADE", reason="Conflicting directional theses; no forced tie-break", scores={})
     reviews = {c.proposal_id: c for c in critics}
     remaining = state.account.equity * policy.aggregate_fraction - sum(abs(p.cost_basis) for p in state.positions)
     for p in proposals:
@@ -98,6 +101,8 @@ def allocate(proposals: list[Proposal], critics: list[CriticReview], state: Mark
                                   0.15 * (1 - critic.severity), 4)
     if not scores or max(scores.values()) < 0.5:
         return Allocation(decision="NO_TRADE", reason="No candidate clears exposure, critic, budget and composite-quality floor", scores=scores)
-    winner = max(scores, key=lambda key: (scores[key], key))
+    # Stable tie-break by strategy name, never random proposal UUID.
+    identities = {str(p.id): p.agent for p in proposals}
+    winner = max(scores, key=lambda key: (scores[key], identities[key]))
     return Allocation(decision="SELECT", proposal_id=winner,
                       reason="Highest eligible composite score; still subject to independent hard risk veto", scores=scores)

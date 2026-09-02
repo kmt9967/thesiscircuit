@@ -65,7 +65,8 @@ def validate(proposal: Proposal, state: MarketState, settings: Settings,
          "Paper mode and both live flags disabled")
     gate("paper_endpoint", str(settings.alpaca_paper_base_url).rstrip("/") == PAPER_BASE_URL,
          "Exact paper execution host only")
-    gate("dry_run_gate", not settings.execution_enabled, "Part 1 requires execution disabled")
+    gate("dry_run_gate", not settings.execution_enabled and not settings.autonomous_trading_enabled,
+         "Research requires both execution gates disabled")
     gate("account", a.status == "ACTIVE" and a.expected_account_match and not a.trading_blocked
          and a.options_trading_level >= 2 and a.equity > 0
          and all(isfinite(value) for value in (a.equity, a.cash, a.last_equity, a.buying_power)),
@@ -82,8 +83,10 @@ def validate(proposal: Proposal, state: MarketState, settings: Settings,
     gate("valid_options", c is not None and c.tradable and c.underlying == "SPY"
          and c.multiplier == 100, "Active standard SPY options only")
     gate("proposal", proposal.status == "PROPOSED" and c is not None
-         and proposal.quantity == 1 and proposal.estimated_max_loss == c.ask * 100,
-         "One defined-risk long option with verified premium formula")
+         and proposal.quantity == 1 and abs(proposal.estimated_max_loss - c.ask * 100) < .001
+         and 0 <= (now - proposal.timestamp).total_seconds() <= policy.freshness_seconds
+         and any(o == c for o in state.options),
+         "One fresh defined-risk proposal bound to the refreshed contract snapshot")
     gate("max_new_risk", 0 < proposal.estimated_max_loss <= max_new, f"Maximum new risk ${max_new:.2f}")
     gate("liquidity", c is not None and liquid(c, now, policy),
          "Spread <=10% and $0.15; both quote sizes >=5 or recent OI >=100")

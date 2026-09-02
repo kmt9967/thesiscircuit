@@ -212,12 +212,16 @@ def test_dry_run_cycle_keeps_existing_exposure_and_creates_shadows():
     assert cycle.decision == "NO_TRADE" and cycle.shadows
     assert all(not x.executed for x in cycle.shadows)
     assert not cycle.execution_enabled and cycle.state.positions[0].qty == 1
+    s.options = [option(quote_at=NOW+timedelta(seconds=61))]
     again = run_cycle(s, Settings(),Policy(),"test",1,cycle.shadows,[],NOW+timedelta(seconds=61))
     assert not again.shadows and again.marks
 
 
 def test_batch_idempotent_and_bounded():
     class Repository:
+        async def acquire_lease(self, owner, seconds, cycle_id): return True
+        async def release_lease(self, owner, outcome, cycle=None):
+            if cycle: self.rows[str(cycle.id)] = cycle
         def __init__(self):
             self.rows = {}
         async def completed(self,key): return key in self.rows

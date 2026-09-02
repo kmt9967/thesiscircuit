@@ -50,9 +50,10 @@ async def lifespan(app: FastAPI):
                     Policy(emergency_kill=settings.phase2_emergency_kill,
                            daily_drawdown_fraction=settings.phase2_daily_drawdown_fraction),
                     settings.phase2_dry_run_batch,
+                    interval=settings.phase2_cycle_seconds,
                 )
             phase2_batch_status.update(status="completed", cycle_ids=ids)
-        except (httpx.HTTPError, RuntimeError, ValueError, TypeError, KeyError) as exc:
+        except (httpx.HTTPError, RuntimeError, ValueError, TypeError, KeyError, asyncio.TimeoutError) as exc:
             # Never log exception bodies/headers/provider payloads containing server credentials.
             phase2_batch_status.update(status="blocked", error_type=type(exc).__name__)
 
@@ -116,6 +117,8 @@ async def safety() -> dict[str, object]:
         "phase1_authorization_retired": PHASE1_RETIRED,
         "phase2_mode": "DRY_RUN",
         "phase2_execution_authorized": False,
+        "autonomous_trading_enabled": settings.autonomous_trading_enabled,
+        "phase2_dispatch_available": False,
     }
 
 
@@ -511,10 +514,35 @@ async def phase2_dashboard() -> dict[str, Any]:
             rows = await repository.recent("autonomous_cycles", 5)
             shadows = await repository.recent("shadow_trades")
             marks = await repository.recent("shadow_marks", 100)
+            dispatcher = await repository.dispatcher_status()
         return {"mode": "DRY_RUN", "execution_enabled": False, "database_connected": True,
-                "batch_status": phase2_batch_status, "latest": rows[0]["payload"] if rows else None,
+                "batch_status": phase2_batch_status, "dispatcher":dispatcher,
+                "latest": rows[0]["payload"] if rows else None,
                 "cycles": [{"id": r["id"], "created_at": r["created_at"],
                             "decision": r["payload"]["decision"]} for r in rows],
                 "shadows": [r["payload"] for r in shadows], "marks": [r["payload"] for r in marks]}
     except (httpx.HTTPError, ValueError, TypeError, RuntimeError):
         raise HTTPException(status_code=503, detail="Phase 2 audit unavailable; execution remains disabled")
+
+
+@app.get("/phase2/portfolio")
+async def phase2_portfolio() -> dict[str, Any]:
+    from backend.app.phase2.data import ReadOnlyMarketProvider
+    from backend.app.phase2.features import classify
+    from backend.app.phase2.outcomes import review_positions
+    from backend.app.phase2.policy import Policy
+    try:
+        state = await ReadOnlyMarketProvider(settings).refresh(observations_only=True)
+        now = datetime.now(timezone.utc)
+        return {"classification":"ACTUAL ALPACA PAPER RESULTS", "observed_at":now,
+            "market_open":state.clock.is_open, "account":{
+                "equity":state.account.equity,"cash":state.account.cash,
+                "buying_power":state.account.options_buying_power,
+                "competition_pnl":round(state.account.equity-100000,2),
+                "expected_account_match":state.account.expected_account_match},
+            "total_orders":len(state.orders), "execution_enabled":False,
+            "autonomous_trading_enabled":settings.autonomous_trading_enabled,
+            "positions":review_positions(state,classify(None,now),Policy(),now),
+            "risk_limits":Policy().model_dump(), "data_errors":state.data_errors}
+    except (AlpacaError, httpx.HTTPError, RuntimeError, ValueError, KeyError, TypeError):
+        raise HTTPException(status_code=503, detail="Current broker state unavailable; no execution")

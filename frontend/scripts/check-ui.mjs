@@ -28,3 +28,7 @@ assert.match(research, /phase2\/dashboard/);
 assert.match(research, /AbortController/);
 assert.match(page, /Phase2Dashboard/);
 console.log("Phase 2 research, counterfactual, missing-data and no-execution UI checks passed.");
+for (const label of ["ACTUAL ALPACA PAPER RESULTS", "Competition P&", "AUTONOMOUS TRADING DISABLED",
+  "STALE / not eligible for execution", "phase2/portfolio", "No account values are invented"]) {
+  assert.ok(research.includes(label), `Missing Part 2 state: ${label}`);
+}

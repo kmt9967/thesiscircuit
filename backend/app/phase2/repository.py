@@ -3,6 +3,32 @@ from backend.app.services.supabase import SupabaseAuditRepository
 
 
 class Phase2Repository(SupabaseAuditRepository):
+    async def dispatcher_status(self) -> dict:
+        response = await self.client.get(f"{self.base}/phase2_cycle_lease", headers=self.headers,
+            params={"select":"cycle_id,expires_at,next_allowed_at,events", "singleton":"eq.true"})
+        response.raise_for_status()
+        rows=response.json()
+        if len(rows)!=1:
+            raise RuntimeError("Missing dispatcher singleton")
+        row=rows[0]
+        return {"cycle_id":row["cycle_id"],"expires_at":row["expires_at"],
+                "next_allowed_at":row["next_allowed_at"],"events":row["events"][-20:],
+                "mode":"DRY_RUN", "broker_dispatch_available":False}
+
+    async def acquire_lease(self, owner: str, seconds: int, cycle_id: str) -> bool:
+        response = await self.client.post(f"{self.base}/rpc/phase2_acquire_lease",
+            json={"owner_id": owner, "lease_seconds": seconds, "requested_cycle":cycle_id}, headers=self.headers)
+        response.raise_for_status()
+        return response.json() is True
+
+    async def release_lease(self, owner: str, outcome: str, cycle: Cycle | None = None) -> None:
+        response = await self.client.post(f"{self.base}/rpc/phase2_release_lease",
+            json={"owner_id": owner, "outcome":outcome,
+                  "document":cycle.model_dump(mode="json") if cycle else None}, headers=self.headers)
+        response.raise_for_status()
+        if response.json() is not True:
+            raise RuntimeError("Lease lost or expired; stale worker cannot complete cycle")
+
     async def save_cycle(self, cycle: Cycle) -> None:
         response = await self.client.post(
             f"{self.base}/rpc/phase2_save_cycle", json={"document": cycle.model_dump(mode="json")},

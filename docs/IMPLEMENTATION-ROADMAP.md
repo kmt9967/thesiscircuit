@@ -8,5 +8,9 @@
 4. Phase 2 Part 1 — deterministic agents, critic, allocation, risk, counterfactuals,
    recommendation-only position manager and finite real-data dry runs. Build authorized;
    **zero new orders**. See PHASE-2-ARCHITECTURE.md and evidence/phase-2.
-5. Phase 2 Part 2 — not authorized. No automatic opening/closing, execution token,
-   infinite trading loop or merge of the Phase 2 PR.
+5. Phase 2 Part 2 — validation and readiness work authorized, orders forbidden.
+   Advisory exits, separate token boundary, observations, lease and replay implemented.
+   Production migration/verification status is tracked in evidence/phase-2/PART-2.md.
+6. Future autonomous dispatch — not authorized or implemented. Requires separately
+   reviewed durable intent claims, final preflight, unknown-order reconciliation and
+   bounded execution scope. No automatic opening/closing or merge of PR #3.

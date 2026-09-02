@@ -1,0 +1,217 @@
+{
+  "classification": "SIMULATED STRESS REPLAY - NOT ALPACA RETURNS",
+  "parameter_tuning": false,
+  "variants_per_scenario": 12,
+  "scenarios": [
+    {
+      "scenario": "strong_uptrend",
+      "regimes": {
+        "TREND_UP": 12
+      },
+      "cycles": 12,
+      "proposals_by_agent": {
+        "TREND": 12
+      },
+      "no_trade_frequency": 0,
+      "agent_abstentions": {
+        "RANGE": 12,
+        "DEFENSIVE": 12
+      },
+      "risk_rejections_by_gate": {},
+      "selected_agents": {
+        "TREND": 12
+      },
+      "average_proposed_risk": 185,
+      "max_simulated_drawdown": null,
+      "shadow_outcomes": null,
+      "missed_opportunities": null,
+      "false_positives": null,
+      "outcome_limitation": "No subsequent option-price path; not calculable"
+    },
+    {
+      "scenario": "strong_downtrend",
+      "regimes": {
+        "TREND_DOWN": 12
+      },
+      "cycles": 12,
+      "proposals_by_agent": {
+        "TREND": 12,
+        "DEFENSIVE": 12
+      },
+      "no_trade_frequency": 0,
+      "agent_abstentions": {
+        "RANGE": 12
+      },
+      "risk_rejections_by_gate": {},
+      "selected_agents": {
+        "TREND": 12
+      },
+      "average_proposed_risk": 185,
+      "max_simulated_drawdown": null,
+      "shadow_outcomes": null,
+      "missed_opportunities": null,
+      "false_positives": null,
+      "outcome_limitation": "No subsequent option-price path; not calculable"
+    },
+    {
+      "scenario": "range",
+      "regimes": {
+        "LOW_VOLATILITY": 11,
+        "RANGE": 1
+      },
+      "cycles": 12,
+      "proposals_by_agent": {},
+      "no_trade_frequency": 1,
+      "agent_abstentions": {
+        "TREND": 12,
+        "RANGE": 12,
+        "DEFENSIVE": 12
+      },
+      "risk_rejections_by_gate": {},
+      "selected_agents": {},
+      "average_proposed_risk": null,
+      "max_simulated_drawdown": null,
+      "shadow_outcomes": null,
+      "missed_opportunities": null,
+      "false_positives": null,
+      "outcome_limitation": "No subsequent option-price path; not calculable"
+    },
+    {
+      "scenario": "volatility_expansion",
+      "regimes": {
+        "HIGH_VOLATILITY": 12
+      },
+      "cycles": 12,
+      "proposals_by_agent": {},
+      "no_trade_frequency": 1,
+      "agent_abstentions": {
+        "TREND": 12,
+        "RANGE": 12,
+        "DEFENSIVE": 12
+      },
+      "risk_rejections_by_gate": {},
+      "selected_agents": {},
+      "average_proposed_risk": null,
+      "max_simulated_drawdown": null,
+      "shadow_outcomes": null,
+      "missed_opportunities": null,
+      "false_positives": null,
+      "outcome_limitation": "No subsequent option-price path; not calculable"
+    },
+    {
+      "scenario": "low_volatility",
+      "regimes": {
+        "LOW_VOLATILITY": 12
+      },
+      "cycles": 12,
+      "proposals_by_agent": {},
+      "no_trade_frequency": 1,
+      "agent_abstentions": {
+        "TREND": 12,
+        "RANGE": 12,
+        "DEFENSIVE": 12
+      },
+      "risk_rejections_by_gate": {},
+      "selected_agents": {},
+      "average_proposed_risk": null,
+      "max_simulated_drawdown": null,
+      "shadow_outcomes": null,
+      "missed_opportunities": null,
+      "false_positives": null,
+      "outcome_limitation": "No subsequent option-price path; not calculable"
+    },
+    {
+      "scenario": "bad_liquidity",
+      "regimes": {
+        "TREND_UP": 12
+      },
+      "cycles": 12,
+      "proposals_by_agent": {},
+      "no_trade_frequency": 1,
+      "agent_abstentions": {
+        "TREND": 12,
+        "RANGE": 12,
+        "DEFENSIVE": 12
+      },
+      "risk_rejections_by_gate": {},
+      "selected_agents": {},
+      "average_proposed_risk": null,
+      "max_simulated_drawdown": null,
+      "shadow_outcomes": null,
+      "missed_opportunities": null,
+      "false_positives": null,
+      "outcome_limitation": "No subsequent option-price path; not calculable"
+    },
+    {
+      "scenario": "stale_data",
+      "regimes": {
+        "UNCERTAIN": 12
+      },
+      "cycles": 12,
+      "proposals_by_agent": {},
+      "no_trade_frequency": 1,
+      "agent_abstentions": {
+        "TREND": 12,
+        "RANGE": 12,
+        "DEFENSIVE": 12
+      },
+      "risk_rejections_by_gate": {},
+      "selected_agents": {},
+      "average_proposed_risk": null,
+      "max_simulated_drawdown": null,
+      "shadow_outcomes": null,
+      "missed_opportunities": null,
+      "false_positives": null,
+      "outcome_limitation": "No subsequent option-price path; not calculable"
+    },
+    {
+      "scenario": "contradictory_signals",
+      "regimes": {
+        "TREND_DOWN": 12
+      },
+      "cycles": 12,
+      "proposals_by_agent": {
+        "TREND": 12,
+        "DEFENSIVE": 12
+      },
+      "no_trade_frequency": 0,
+      "agent_abstentions": {
+        "RANGE": 12
+      },
+      "risk_rejections_by_gate": {},
+      "selected_agents": {
+        "TREND": 12
+      },
+      "average_proposed_risk": 185,
+      "max_simulated_drawdown": null,
+      "shadow_outcomes": null,
+      "missed_opportunities": null,
+      "false_positives": null,
+      "outcome_limitation": "No subsequent option-price path; not calculable"
+    }
+  ],
+  "historical": {
+    "classification": "HISTORICAL RECORDED SNAPSHOT REPLAY",
+    "source_cycle": "75800d24-dbc1-54da-b563-f3f2f4949127",
+    "source_time": "2026-09-02T17:17:22.944947Z",
+    "decision": "NO_TRADE",
+    "proposals": [
+      {
+        "agent": "TREND",
+        "status": "NO_TRADE",
+        "symbol": null
+      },
+      {
+        "agent": "RANGE",
+        "status": "PROPOSED",
+        "symbol": "SPY260904C00765000"
+      },
+      {
+        "agent": "DEFENSIVE",
+        "status": "NO_TRADE",
+        "symbol": null
+      }
+    ],
+    "not_a_backtest": true
+  }
+}

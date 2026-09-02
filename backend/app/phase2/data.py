@@ -30,7 +30,8 @@ class ReadOnlyMarketProvider:
     def __init__(self, settings: Settings):
         self.settings = settings
 
-    async def refresh(self, shadow_symbols: list[str] | None = None) -> MarketState:
+    async def refresh(self, shadow_symbols: list[str] | None = None,
+                      observations_only: bool = False) -> MarketState:
         now = datetime.now(timezone.utc)
         async with AccountService(self.settings) as account:
             a, clock, raw_positions, raw_orders = await asyncio.gather(
@@ -46,6 +47,23 @@ class ReadOnlyMarketProvider:
                             status=o["status"], submitted_at=o["submitted_at"]) for o in raw_orders]
         state = MarketState(timestamp=now, account=a, clock=clock, positions=positions, orders=orders)
         async with MarketDataService(self.settings) as data:
+            # Independent observations survive a closed market or failed feature refresh.
+            # They are NOT inserted into the fresh entry-candidate universe.
+            for symbol in sorted({p.symbol for p in positions} | set(shadow_symbols or [])):
+                try:
+                    contract = await data._get(data.paper_base, f"/v2/options/contracts/{symbol}")
+                    raw_snapshot = await data._get(data.data_base, "/v1beta1/options/snapshots", {
+                        "symbols": symbol, "feed": self.settings.alpaca_market_data_feed,
+                    })
+                    observation = parse_option(contract, {**raw_snapshot["snapshots"][symbol],
+                        "source": f"alpaca:{self.settings.alpaca_market_data_feed}"})
+                    if not 0 <= (datetime.now(timezone.utc) - observation.quote_at).total_seconds() <= 259200:
+                        raise ValueError("Observation future-dated or older than 72 hours")
+                    state.observations.append(observation)
+                except (AlpacaError, ValueError, KeyError, TypeError):
+                    state.data_errors.append(f"Observation unavailable: {symbol}")
+            if observations_only:
+                return state
             try:
                 quote = await data.stock_quote("SPY")
                 local_date = now.astimezone(ZoneInfo("America/New_York")).date()

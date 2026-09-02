@@ -1,5 +1,8 @@
 # Phase 2 Part 1 evidence
 
+Part 1 is preserved below as historical evidence. See [Part 2 validation](PART-2.md)
+for the continuation and [offline replay](part2-replay.json) for labelled stress results.
+
 ## VERIFIED
 
 - PR2 merged after green checks; work continued on `feat/phase-2-autonomous-agent`.

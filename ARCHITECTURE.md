@@ -7,6 +7,11 @@ GET-only Alpaca → deterministic features/regime → three competing agents →
 → allocator → independent risk → blocked execution → Supabase counterfactual audit.
 Position recommendations cannot submit closing orders. Phase 1 authorization is retired.
 
+Part 2 adds an independent observation channel for closed-market position/shadow quotes,
+a global database research lease, strict future authorization/exit schemas and offline replay.
+See [Autonomy boundary](docs/AUTONOMY.md). Neither the Phase 2 token checker nor an
+APPROVED risk result grants order capability. Both execution flags remain disabled.
+
 ## Planned multi-agent decision circuit (not activated)
 
 1. Market/research inputs become an immutable `ThesisRequest`.

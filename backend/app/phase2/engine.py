@@ -1,6 +1,7 @@
 import asyncio
+from contextlib import suppress
 from datetime import datetime, timezone
-from uuid import NAMESPACE_URL, uuid5
+from uuid import NAMESPACE_URL, uuid4, uuid5
 
 from backend.app.config import DATA_BASE_URL, PAPER_BASE_URL, Settings
 from backend.app.phase2.agents import AGENTS, allocate, critique, propose
@@ -11,11 +12,12 @@ from backend.app.phase2.policy import Policy, validate
 
 
 def assert_dry_run(settings: Settings) -> None:
-    if (settings.execution_enabled or settings.allow_live_trading or settings.live_trading_allowed
+    if (settings.execution_enabled or settings.autonomous_trading_enabled
+            or settings.allow_live_trading or settings.live_trading_allowed
             or not settings.alpaca_paper_trade or settings.trading_mode != "paper"
             or str(settings.alpaca_paper_base_url).rstrip("/") != PAPER_BASE_URL
             or str(settings.alpaca_data_base_url).rstrip("/") != DATA_BASE_URL):
-        raise RuntimeError("Phase 2 Part 1 is paper-only and execution-disabled")
+        raise RuntimeError("Phase 2 research requires both execution gates disabled and paper-only settings")
 
 
 def run_cycle(state: MarketState, settings: Settings, policy: Policy, batch: str, sequence: int,
@@ -57,6 +59,14 @@ def run_cycle(state: MarketState, settings: Settings, policy: Policy, batch: str
 
 async def run_batch(provider, repository, settings: Settings, policy: Policy, batch: str,
                     count: int = 3, interval: float = 60, sleep=asyncio.sleep) -> list[str]:
+    assert_dry_run(settings)
+    if not batch or not 1 <= count <= 3 or not 60 <= interval <= 3600:
+        raise ValueError("Only bounded 1–3 cycle batches, 60–3600 seconds apart")
+    return await _run_batch(provider, repository, settings, policy, batch, count, interval, sleep)
+
+
+async def _run_batch(provider, repository, settings: Settings, policy: Policy, batch: str,
+                     count: int, interval: float, sleep) -> list[str]:
     """Finite server-owned dry-run batch. No public trigger and no broker write dependency.
 
     Deterministic batch/sequence keys and transactional insert prevent duplicate audit cycles
@@ -71,13 +81,25 @@ async def run_batch(provider, repository, settings: Settings, policy: Policy, ba
         if await repository.completed(cycle_id):
             completed.append(cycle_id)
             continue
-        assert_dry_run(settings)
-        shadows, old_marks = await repository.history()
-        state = await provider.refresh(list({s.symbol for s in shadows}))
-        cycle = run_cycle(state, settings, policy, batch, sequence, shadows, old_marks,
-                          datetime.now(timezone.utc))
-        assert_dry_run(settings)
-        await repository.save_cycle(cycle)
+        owner = str(uuid4())
+        if not await repository.acquire_lease(owner, 180, cycle_id):
+            raise RuntimeError("NO_TRADE: lease overlap, cooldown, completed cycle or retry budget exhausted")
+        async def work(sequence=sequence):
+            assert_dry_run(settings)
+            shadows, old_marks = await repository.history()
+            state = await provider.refresh(list({s.symbol for s in shadows}))
+            return run_cycle(state, settings, policy, batch, sequence, shadows, old_marks,
+                             datetime.now(timezone.utc))
+        try:
+            cycle = await asyncio.wait_for(work(), timeout=150)
+            assert_dry_run(settings)
+            await repository.release_lease(owner, "COMPLETED", cycle)
+        except (Exception, asyncio.CancelledError):
+            # Ambiguous completion is never retried blindly. Next explicit run
+            # checks durable completion first; SQL caps total attempts at two.
+            with suppress(Exception):
+                await repository.release_lease(owner, "FAILED")
+            raise
         completed.append(cycle_id)
         if sequence + 1 < count:
             await sleep(interval)

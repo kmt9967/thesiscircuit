@@ -39,6 +39,9 @@ class Settings(BaseSettings):
     phase1_official_end_utc: str = "2026-09-04T13:30:00Z"
     phase1_execution_token: SecretStr | None = None
     phase2_dry_run_batch: str = ""
+    autonomous_trading_enabled: bool = False
+    phase2_execution_token: SecretStr | None = None
+    phase2_cycle_seconds: int = Field(default=60, ge=60, le=3600)
     phase2_emergency_kill: bool = False
     phase2_daily_drawdown_fraction: float = Field(default=0.01, gt=0, le=0.01)
 
@@ -52,7 +55,9 @@ class Settings(BaseSettings):
             raise ValueError("Live trading is permanently disabled")
         if self.allow_live_trading:
             raise ValueError("ALLOW_LIVE_TRADING must remain false")
-        if self.execution_enabled and not self.phase1_execution_token:
+        if self.autonomous_trading_enabled and (not self.execution_enabled or not self.phase2_execution_token):
+            raise ValueError("Autonomous mode requires separate Phase 2 server authorization and execution gate")
+        if self.execution_enabled and not (self.phase1_execution_token or self.phase2_execution_token):
             raise ValueError("Phase 1 execution requires a server-only authorization token")
         if not self.alpaca_paper_trade:
             raise ValueError("ALPACA_PAPER_TRADE must remain true")

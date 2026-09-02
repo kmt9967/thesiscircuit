@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-type Option = {symbol: string; bid: number; ask: number; source: string; quote_at: string; theta: number | null; delta: number | null; expiry: string};
+type Option = {symbol: string; bid: number; ask: number; source: string; quote_at: string; theta: number | null; delta: number | null; gamma: number | null; vega: number | null; expiry: string};
 type Proposal = {id: string; agent: string; thesis: string; confidence: number; estimated_max_loss: number; status: string; contract: Option | null; reasons_not_to_trade: string[]};
 type Critic = {proposal_id: string; strongest_counterargument: string; concentration_risk: string; no_trade_argument: string};
 type Risk = {proposal_id: string; decision: string; reasons: string[]; checks: {name: string; passed: boolean; reason: string}[]};
@@ -12,30 +12,42 @@ type Mark = {shadow_id: string; timestamp: string; hypothetical_pnl: number; dec
 type PositionReview = {timestamp: string; recommendation: string; reasons: string[]; hours_to_expiry: number | null; theta_daily_dollars: number | null; quote: Option | null; position: {symbol: string; qty: number; entry: number; current_price: number; market_value: number; unrealized_pl: number; unrealized_plpc: number}};
 type Cycle = {id: string; created_at: string; decision: string; regime: {name: string; confidence: number; metrics: Record<string, number | null>}; proposals: Proposal[]; critics: Critic[]; risk: Risk[]; scores: Score[]; allocation: {decision: string; reason: string; proposal_id: string | null}; position_reviews: PositionReview[]; state: {data_errors: string[]}; timeline: {sequence: number; stage: string; timestamp: string}[]};
 type Data = {latest: Cycle | null; execution_enabled: false; batch_status: {status: string}; shadows: Shadow[]; marks: Mark[]; cycles: {id: string; created_at: string; decision: string}[]};
+type Portfolio = {observed_at: string; market_open: boolean; account: {equity: number; cash: number; buying_power: number; competition_pnl: number}; total_orders: number; positions: (PositionReview & {quote_fresh: boolean; mark_basis: string})[]};
 const money = (n: number | null | undefined) => n == null ? "Not measured" : new Intl.NumberFormat("en-US", {style: "currency", currency: "USD"}).format(n);
 const when = (t: string) => new Date(t).toLocaleString();
 
 export default function Phase2Dashboard() {
   const [data, setData] = useState<Data | null>(null);
+  const [portfolio, setPortfolio] = useState<Portfolio | null>(null);
   const [error, setError] = useState(false);
   const [refresh, setRefresh] = useState(0);
   useEffect(() => {
     const controller = new AbortController();
     let mounted = true;
     const timeout = setTimeout(() => controller.abort(), 15000);
+    fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/phase2/portfolio`, {cache: "no-store", signal: controller.signal})
+      .then(r => {if (!r.ok) throw new Error("Broker unavailable"); return r.json();})
+      .then(p => {if (mounted) setPortfolio(p);})
+      .catch(() => {if (mounted) setPortfolio(null);});
     fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/phase2/dashboard`, {cache: "no-store", signal: controller.signal})
       .then(r => { if (!r.ok) throw new Error("Audit unavailable"); return r.json(); })
       .then(d => {if (mounted) {setData(d); setError(false);}})
       .catch(() => {if (mounted) setError(true);})
-      .finally(() => clearTimeout(timeout));
+      ;
     return () => {mounted = false; clearTimeout(timeout); controller.abort();};
   }, [refresh]);
   const cycle = data?.latest;
   return <>
     <div className="disclosure">SIMULATED PAPER TRADING — NO REAL FUNDS</div>
+    <section className="panel" id="actual-results"><small>ACTUAL ALPACA PAPER RESULTS</small><h2>Competition account.</h2>
+      {portfolio ? <><div className="metrics"><article><small>Official account equity</small><strong>{money(portfolio.account.equity)}</strong></article><article><small>Competition P&amp;L vs $100,000</small><strong>{money(portfolio.account.competition_pnl)}</strong></article><article><small>Cash / options buying power</small><strong>{money(portfolio.account.cash)}</strong><small>{money(portfolio.account.buying_power)}</small></article></div><p>Broker read {when(portfolio.observed_at)} · Market {portfolio.market_open ? "OPEN" : "CLOSED"} · {portfolio.total_orders} historical orders. Not shadow returns or an official judging certification.</p>
+      {portfolio.positions.map(r => <article className="agent-card" key={r.position.symbol}><h3>{r.position.symbol} · {r.position.qty} long</h3><p>Entry {money(r.position.entry)} · broker value {money(r.position.market_value)} · unrealized {money(r.position.unrealized_pl)}</p><p>{r.quote ? `Last available ${r.quote.source} bid / ask: ${money(r.quote.bid)} / ${money(r.quote.ask)} · ${when(r.quote.quote_at)}` : "Option quote unavailable"}. {r.quote_fresh ? "Fresh quote" : "STALE / not eligible for execution"}</p><p>Expiry {r.quote?.expiry ?? "Unknown"} · {r.hours_to_expiry?.toFixed(1) ?? "Unknown"} hours remaining at read time</p><p>Delta {r.quote?.delta ?? "Unknown"} · gamma {r.quote?.gamma ?? "Unknown"} · theta {r.quote?.theta ?? "Unknown"} · vega {r.quote?.vega ?? "Unknown"} — snapshot estimates, not live Greeks.</p><p><strong>{r.recommendation}</strong> · {r.reasons.join("; ")}</p><small>{r.mark_basis}. No closing authority; regime thesis unassessed until a fresh research cycle.</small></article>)}
+      {!portfolio.positions.length && <p>No open paper position.</p>}</> : <p>Current broker account unavailable or loading. No account values are invented.</p>}
+      <p>EXECUTION DISABLED · AUTONOMOUS TRADING DISABLED</p><p>Risk: min($500, 0.5% equity) per entry · 2% aggregate premium · 1% daily drawdown veto · 3 positions · one thesis per underlying · 15-minute cooldown.</p>
+    </section>
     <section className="panel" id="arena">
       <header><div><small>PHASE 2 / READ-ONLY RESEARCH</small><h2>Strategy arena.</h2></div><span className="badge paper">EXECUTION DISABLED</span></header>
-      <p>Three competing theses. One independent veto. No orders in Part 1.</p>
+      <p>Three competing theses. One independent veto. No Phase 2 orders.</p>
       <button className="refresh" onClick={() => setRefresh(x => x + 1)}>Refresh recorded state</button>
       <p className="asof">{cycle ? `Recorded ${when(cycle.created_at)} · Finite batch ${data?.batch_status.status}` : "No completed Phase 2 cycle yet."} This is a timestamped snapshot, not a live price stream.</p>
       {error && <p role="alert">Audit unavailable. No execution is possible; previously loaded data may be stale.</p>}

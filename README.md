@@ -10,6 +10,9 @@ and the Phase 1 token's authorization mechanism is retired.
 ## Phase 2 research
 
 See [Phase 2 architecture and risk policy](docs/PHASE-2-ARCHITECTURE.md).
+Part 2 validation is described in [Phase 2 readiness](docs/PHASE-2.md) and
+the [one-page Alpaca technical story](docs/ALPACA-TECH-STORY.md). Both execution gates
+remain disabled. Pure authorization checks are not a broker dispatcher.
 The Strategy Arena, Decision Council and Shadow Desk show recorded real-data
 research, not fabricated performance. Finite operator-configured batches run three
 cycles and stop. The existing SPY paper position remains untouched.
