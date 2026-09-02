@@ -10,7 +10,7 @@
    **zero new orders**. See PHASE-2-ARCHITECTURE.md and evidence/phase-2.
 5. Phase 2 Part 2 — validation and readiness work authorized, orders forbidden.
    Advisory exits, separate token boundary, observations, lease and replay implemented.
-   Production migration/verification status is tracked in evidence/phase-2/PART-2.md.
+   Production migration and three closed-market dry runs verified; see evidence/phase-2/PART-2.md.
 6. Future autonomous dispatch — not authorized or implemented. Requires separately
    reviewed durable intent claims, final preflight, unknown-order reconciliation and
    bounded execution scope. No automatic opening/closing or merge of PR #3.

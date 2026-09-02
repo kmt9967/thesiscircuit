@@ -16,6 +16,11 @@ exact-horizon historical options backtests or statistically meaningful performan
 Therefore the system is NOT yet ready to enable autonomous PAPER orders. It is ready for
 controlled read-only dry-run validation. Both execution flags remain false.
 
+The durable cycle dispatcher is now deployed and verified: one RLS-protected singleton,
+two service-only RPCs, per-cycle owner fencing, three-minute expiry, atomic audit completion,
+60-second cadence/cooldown, two-attempt ceiling and abandoned-cycle recovery. Three new
+production dry runs completed with zero new orders. See evidence/phase-2/PART-2.md.
+
 Evidence lives in `evidence/phase-2/`. The replay command is `python -m scripts.phase2_replay`.
 Results are explicitly HISTORICAL or SIMULATED. Null outcomes mean unmeasured, never flat P&L.
 

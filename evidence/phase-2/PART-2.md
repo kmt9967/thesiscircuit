@@ -30,16 +30,38 @@
   are deleted/modified. This is controlled expiry-state verification, not a real process crash.
 - Local concurrent-worker and lost-acknowledgment tests passed; completed cycles are not repeated.
 
-## CONFIGURED IN CODE / DEPLOYMENT PENDING
+## PRODUCTION VERIFIED
 
 - Separate Phase 2 token checker, both-disabled defaults and startup enforcement.
 - Advisory sell-to-close schema with owned-quantity checks; no executable route.
 - Global bounded research lease and additive migration 004.
 - Actual account/competition-P&L dashboard separated from counterfactual research.
 
-## PENDING
+- Implementation commit a5b2208 deployed to Railway (86dd4770-1c97-4e7c-95d7-af3439a8dbdb)
+  and Vercel production (5Mctei4bKPB8PGyXnFBgGbJWu3w3), both successful.
+- New bounded batch phase2-part2-20260902-b completed three cycles at ~22:12–22:14 UTC:
+  669d6cbb-879e-5e1c-872d-227e7d4db5fd,
+  f0aab695-967f-5a7a-a3e4-78ea4f00d49b,
+  413058ac-0457-5a87-aab6-f78980c46cd1.
+  All NO_TRADE; nine agent abstentions; market closed and data stale. Six lifecycle
+  events (START/COMPLETED per cycle), each first attempt, lock released. No overlapping work.
+- Paper account equity 99979.97; competition equity delta -20.03; cash 99815.97;
+  one historical order, one original SPY long call, entry 1.84, broker value164 / unrealized-20.
+- Last legitimate indicative quote September2 19:59:59UTC: bid1.66/ask1.68,
+  delta.345, gamma.0507, theta-.6958, vega.2086. Explicitly stale, not trade eligible.
+  Advisory RISK_ALERT, regime compatibility unassessed, no closing action.
+- One unique existing RANGE shadow now marked: ask3.06 → later bid3.07 at19:59:59UTC,
+  elapsed162.6minutes, hypothetical+1.00. Repeated cycle marks count as one scoring sample;
+  RANGE score50.24; no attribution to actual Alpaca P&L. No new shadow entries while closed.
+- Production UI inspected: actual equity/P&L, stale quote and Greeks, disabled gates,
+  counterfactual shadow gain and score visible. HTTP200 and CORS allow the Vercel origin.
+  No new browser console errors/warnings during post-deployment verification. Two older
+  extension-message-channel errors at20:59UTC predate this deployment and are not app failures.
+- Backend/frontend CI passed on the implementation commit. Sanitized full evidence is in
+  part2-production.json. No credential was read, generated, changed, or exposed.
 
-- Non-secret AUTONOMOUS_TRADING_ENABLED=false and bounded batch label staged in Railway.
-- Push/deploy, record new cycles/position quotes/shadow marks, verify browser/CORS/CI.
+## REMAINING AUTONOMOUS-ORDER LIMITATIONS
+
+- EXECUTION_ENABLED=false and AUTONOMOUS_TRADING_ENABLED=false verified in production.
 - No autonomous trading readiness claim: durable Phase 2 dispatcher, intent claims,
   broker reconciliation and an explicit order/exit authorization budget remain future work.
