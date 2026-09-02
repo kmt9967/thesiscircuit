@@ -37,6 +37,9 @@ class AccountSnapshot(BaseModel):
     last_equity: float
     options_buying_power: float | None = None
     account_number_suffix: str
+    expected_account_match: bool = False
+    trading_blocked: bool = True
+    options_trading_level: int = 0
 
 
 class AssetSnapshot(BaseModel):
@@ -67,6 +70,7 @@ class OptionContract(BaseModel):
     option_type: Literal["call", "put"]
     status: str
     tradable: bool
+    size: int = 100
 
 
 class TradeProposal(BaseModel):
@@ -137,12 +141,18 @@ class PaperOrderRecord(BaseModel):
 
 
 class Phase1Preflight(BaseModel):
+    stage: Literal["readiness", "execution"] = "execution"
+    result: Literal["READY_FOR_EXECUTION", "APPROVED_FOR_SINGLE_ORDER", "REJECTED"] = "REJECTED"
+    receipt_id: UUID | None = None
+    readiness_id: UUID | None = None
+    expires_at: datetime | None = None
     proposal: TradeProposal
     risk: ExecutionRiskDecision
     account: AccountSnapshot
     clock: MarketClock
     open_orders: int
     open_positions: int
+    total_orders: int = 0
 
 
 class DashboardState(BaseModel):

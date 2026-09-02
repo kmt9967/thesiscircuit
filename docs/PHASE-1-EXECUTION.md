@@ -10,11 +10,32 @@ The candidate is one SPY call expiring September 4, 2026, selected near the mone
 
 ## Lifecycle
 
-Market/account reads → canonical proposal → 17 risk gates → Supabase proposal/risk/decision events → one idempotent PAPER order → Alpaca order lookup → optional read-only reconciliation → fill and position snapshot → execution disabled.
+Fresh market/account reads → readiness (execution MUST be disabled) → durable
+`READY_FOR_EXECUTION` receipt → operator enables Railway execution → fresh execution
+preflight → durable `APPROVED_FOR_SINGLE_ORDER` receipt → fresh submission recheck →
+immutable Supabase claim → canonical audit → at most one PAPER order attempt →
+immediate local shutdown → Railway environment shutdown → read-only reconciliation.
+
+Both stages run the same 18 gates, including an explicit liquidity gate. Only the
+expected execution-gate state differs. Readiness expires after 15 minutes; final
+approval after 60 seconds. Final and submission checks pin the readiness instrument
+and forbid an increased premium. Changed candidates require a new disabled readiness.
+
+Supabase `system_events` sequences -2/-1 hold sanitized readiness/execution receipts.
+Sequence 0 is an immutable INSERT, protected by UNIQUE(trace_id, sequence), never an
+upsert. It is consumed before any broker write and persists across replicas/restarts.
+Audit/network uncertainty leaves it consumed: reconcile by client ID; never retry.
+Effective production execution is false whenever this claim exists, even if a
+deployment temporarily still has the environment switch enabled. The operator must
+also reset Railway's environment switch to false. No automatic close/cancel exists.
 
 ## Current verified result
 
-Implementation, audit schema, Railway backend, Vercel frontend, and read-only production preflight are verified. The preflight generated `SPY260904C00774000`, one long-call contract with $222 maximum simulated loss, then correctly rejected it because execution was disabled, the weekend quote was stale, the official window had not opened, and the market was closed. No Phase 1 order has been submitted. Order, fill, position, and P&L fields remain empty and must not be described as executed until Alpaca reports them.
+The August 30 preflight was rejected before the official trading window; it did not
+submit an order. The September 2 candidate is `SPY260904C00768000`; readiness refreshes
+that contract before considering any replacement. The two-stage fix is implemented
+and tested locally. Deployment and actual execution results must be recorded below
+only after production verification; no test fixture represents an executed order.
 
 ## Limitations
 

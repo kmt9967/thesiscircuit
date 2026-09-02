@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+import secrets
 from datetime import datetime, timezone
-from typing import Any
+from typing import Any, Literal
+from uuid import UUID
 
 import httpx
 from fastapi import FastAPI, Header, HTTPException
@@ -16,6 +18,7 @@ from backend.app.models import (
     ThesisRequest,
 )
 from backend.app.services.alpaca import AccountService, AlpacaError, MarketDataService, OrderService
+from backend.app.services.preflight import TRACE_ID, PreflightBlocked, TwoStagePreflight
 from backend.app.services.proposal import build_deterministic_proposal
 from backend.app.services.risk import validate_execution
 from backend.app.services.supabase import SupabaseAuditRepository
@@ -37,25 +40,37 @@ app.add_middleware(
 )
 
 
+async def _execution_enabled() -> bool:
+    if not settings.execution_enabled:
+        return False
+    try:
+        async with SupabaseAuditRepository(settings) as repository:
+            return await repository.event(TRACE_ID, 0) is None
+    except (httpx.HTTPError, RuntimeError, ValueError):
+        return False
+
+
 @app.get("/health")
-def health() -> dict[str, str]:
+async def health() -> dict[str, str]:
     return {
         "status": "ok",
         "mode": "paper",
-        "orders": "enabled" if settings.execution_enabled else "disabled",
+        "orders": "enabled" if await _execution_enabled() else "disabled",
     }
 
 
 @app.get("/safety")
-def safety() -> dict[str, object]:
+async def safety() -> dict[str, object]:
+    enabled = await _execution_enabled()
     return {
         "paper_base_url": str(settings.alpaca_paper_base_url).rstrip("/"),
         "data_base_url": str(settings.alpaca_data_base_url).rstrip("/"),
-        "execution_enabled": settings.execution_enabled,
+        "execution_enabled": enabled,
+        "configured_execution_enabled": settings.execution_enabled,
         "allow_live_trading": settings.allow_live_trading,
         "alpaca_paper_trade": settings.alpaca_paper_trade,
         "live_trading_allowed": settings.live_trading_allowed,
-        "order_submission_enabled": settings.execution_enabled,
+        "order_submission_enabled": enabled,
         "competition_starting_balance": settings.alpaca_competition_starting_balance,
         "one_shot": True,
     }
@@ -99,12 +114,15 @@ def evaluate(request: ThesisRequest) -> RiskDecision:
     return evaluate_thesis(request)
 
 
-async def _build_preflight() -> Phase1Preflight:
+async def _build_preflight(
+    stage: Literal["readiness", "execution"], preferred_symbol: str,
+) -> Phase1Preflight:
     async with AccountService(settings) as account_service:
         account = await account_service.account()
         clock = await account_service.clock()
         positions = await account_service.positions()
         open_orders = await account_service.open_orders()
+        all_orders = await account_service.all_orders()
     async with MarketDataService(settings) as market_service:
         underlying_quote = await market_service.stock_quote(settings.phase1_symbol)
         contracts = await market_service.option_contracts(
@@ -115,7 +133,9 @@ async def _build_preflight() -> Phase1Preflight:
             key=lambda contract: abs(contract.strike_price - underlying_quote.midpoint),
         )[:300]
         quotes = await market_service.option_quotes([contract.symbol for contract in ranked])
-        proposal = build_deterministic_proposal(settings, underlying_quote.midpoint, ranked, quotes)
+        proposal = build_deterministic_proposal(
+            settings, underlying_quote.midpoint, ranked, quotes, preferred_symbol
+        )
         selected_contract = next(
             contract for contract in ranked if contract.symbol == proposal.instrument
         )
@@ -137,15 +157,21 @@ async def _build_preflight() -> Phase1Preflight:
         open_orders,
         positions,
         duplicate,
+        stage=stage,
+        total_orders=len(all_orders),
     )
     proposal.status = "APPROVED" if risk.decision == "APPROVED" else "REJECTED"
     return Phase1Preflight(
+        stage=stage,
+        result=("READY_FOR_EXECUTION" if stage == "readiness" else "APPROVED_FOR_SINGLE_ORDER")
+        if risk.decision == "APPROVED" else "REJECTED",
         proposal=proposal,
         risk=risk,
         account=account,
         clock=clock,
         open_orders=len(open_orders),
         open_positions=len(positions),
+        total_orders=len(all_orders),
     )
 
 
@@ -184,10 +210,12 @@ async def phase1_market(symbol: str) -> dict[str, Any]:
 
 
 @app.post("/phase1/preflight", response_model=Phase1Preflight)
+@app.post("/phase1/preflight/readiness", response_model=Phase1Preflight)
 async def phase1_preflight() -> Phase1Preflight:
     try:
-        return await _build_preflight()
-    except (AlpacaError, ValueError) as exc:
+        async with SupabaseAuditRepository(settings) as repository:
+            return await TwoStagePreflight(repository, _build_preflight).readiness()
+    except (AlpacaError, ValueError, PreflightBlocked, httpx.HTTPError) as exc:
         raise HTTPException(status_code=409, detail=str(exc)) from exc
 
 
@@ -196,30 +224,44 @@ def _authorize_execution(token: str | None) -> None:
         raise HTTPException(status_code=423, detail="EXECUTION_ENABLED is false")
     if not settings.phase1_execution_token:
         raise HTTPException(status_code=423, detail="Execution token is not configured")
-    if token != settings.phase1_execution_token.get_secret_value():
+    if not token or not secrets.compare_digest(token, settings.phase1_execution_token.get_secret_value()):
         raise HTTPException(status_code=403, detail="Invalid execution authorization")
 
 
-@app.post("/phase1/execute")
-async def phase1_execute(
+@app.post("/phase1/preflight/execution", response_model=Phase1Preflight)
+async def phase1_execution_preflight(
+    readiness_id: UUID | None = None,
+    x_phase1_authorization: str | None = Header(default=None),
+) -> Phase1Preflight:
+    _authorize_execution(x_phase1_authorization)
+    try:
+        async with SupabaseAuditRepository(settings) as repository:
+            result = await TwoStagePreflight(repository, _build_preflight).execution(readiness_id)
+            if result.result != "APPROVED_FOR_SINGLE_ORDER":
+                settings.execution_enabled = False
+            return result
+    except (AlpacaError, ValueError, PreflightBlocked, httpx.HTTPError) as exc:
+        settings.execution_enabled = False
+        raise HTTPException(status_code=409, detail="Execution preflight blocked; disable and repeat readiness") from exc
+
+
+async def _phase1_execute_impl(
+    readiness_id: UUID | None = None,
+    execution_id: UUID | None = None,
     x_phase1_authorization: str | None = Header(default=None),
 ) -> dict[str, Any]:
     """Submit the single authorized PAPER opening order; never retries blindly."""
     _authorize_execution(x_phase1_authorization)
-    preflight = await _build_preflight()
-    if preflight.risk.decision != "APPROVED":
-        raise HTTPException(
-            status_code=409,
-            detail={
-                "decision": preflight.risk.decision,
-                "failed": [check.name for check in preflight.risk.checks if not check.passed],
-            },
-        )
-    trace_id = str(preflight.proposal.trace_id)
     async with SupabaseAuditRepository(settings) as repository:
-        existing = await repository.latest("orders", trace_id)
-        if existing:
-            return {"idempotent": True, "paper": True, "order": existing}
+        coordinator = TwoStagePreflight(repository, _build_preflight)
+        try:
+            preflight = await coordinator.submission_preflight(readiness_id, execution_id)
+        except (AlpacaError, ValueError, PreflightBlocked, httpx.HTTPError) as exc:
+            settings.execution_enabled = False
+            raise HTTPException(status_code=409, detail="Submission blocked; reconcile before any further action") from exc
+        trace_id = str(preflight.proposal.trace_id)
+        # Claim before writing canonical audit rows; losing callers cannot overwrite them.
+        await coordinator.claim(preflight)
         await repository.insert("trade_proposals", preflight.proposal.model_dump(mode="json"))
         await repository.insert("risk_checks", preflight.risk.model_dump(mode="json"))
         await repository.insert(
@@ -253,10 +295,14 @@ async def phase1_execute(
                 "paper": True,
             },
         )
-        async with OrderService(settings) as order_service:
-            order = await order_service.submit_once(
-                preflight.proposal, str(preflight.risk.id), risk_approved=True
-            )
+        try:
+            async with OrderService(settings) as order_service:
+                order = await order_service.submit_once(
+                    preflight.proposal, str(preflight.risk.id), risk_approved=True,
+                    stages_verified=True, submission_claimed=True,
+                )
+        finally:
+            settings.execution_enabled = False
         order_row = order.model_dump(mode="json")
         await repository.insert("orders", order_row)
         await repository.insert(
@@ -276,13 +322,38 @@ async def phase1_execute(
     return {"idempotent": False, "paper": True, "order": order_row}
 
 
+@app.post("/phase1/execute")
+async def phase1_execute(
+    readiness_id: UUID | None = None,
+    execution_id: UUID | None = None,
+    x_phase1_authorization: str | None = Header(default=None),
+) -> dict[str, Any]:
+    _authorize_execution(x_phase1_authorization)
+    try:
+        return await _phase1_execute_impl(readiness_id, execution_id, x_phase1_authorization)
+    finally:
+        # Also shut down on pre-submit audit failure, malformed response, or cancellation.
+        settings.execution_enabled = False
+
+
 @app.post("/phase1/reconcile")
 async def phase1_reconcile() -> dict[str, Any]:
     """Read and persist the existing one-shot order state; never submits an order."""
     async with SupabaseAuditRepository(settings) as repository:
         existing = await repository.latest("orders")
         if not existing:
-            return {"paper": True, "status": "empty", "message": "No Phase 1 order exists"}
+            claim = await repository.event(TRACE_ID, 0)
+            if not claim:
+                return {"paper": True, "status": "empty", "message": "No Phase 1 order exists"}
+            preflight = Phase1Preflight.model_validate(claim["payload"]["preflight"])
+            async with OrderService(settings) as order_service:
+                raw = await order_service.by_client_order_id(preflight.proposal.client_order_id)
+                if not raw:
+                    return {"paper": True, "status": "uncertain", "message": "Claim exists; no broker order found. Never retry."}
+                existing = order_service._record(
+                    raw, preflight.proposal, str(preflight.risk.id)
+                ).model_dump(mode="json")
+            await repository.insert("orders", existing, on_conflict="alpaca_order_id")
         async with OrderService(settings) as order_service:
             raw = await order_service.by_id(existing["alpaca_order_id"])
         existing.update(
@@ -326,6 +397,16 @@ async def phase1_reconcile() -> dict[str, Any]:
                 "paper": True,
             },
         )
+        await repository.insert("system_events", {
+            "trace_id": existing["trace_id"], "sequence": 4, "kind": "actual_alpaca_state",
+            "payload": {"order": existing, "position": position,
+                        "account": account.model_dump(mode="json")}, "paper": True,
+        }, on_conflict="trace_id,sequence")
+        await repository.insert("system_events", {
+            "trace_id": existing["trace_id"], "sequence": 5, "kind": "execution_shutdown",
+            "payload": {"execution_enabled": await _execution_enabled(),
+                        "configured_execution_enabled": settings.execution_enabled}, "paper": True,
+        }, on_conflict="trace_id,sequence")
         return {"paper": True, "order": existing, "position": position}
 
 
@@ -356,7 +437,7 @@ async def phase1_dashboard() -> DashboardState:
         pass
     return DashboardState(
         generated_at=datetime.now(timezone.utc),
-        execution_enabled=settings.execution_enabled,
+        execution_enabled=await _execution_enabled(),
         account=account,
         integrations={
             "alpaca": alpaca_connected,

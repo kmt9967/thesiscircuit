@@ -9,6 +9,34 @@ from backend.app.config import Settings
 
 
 class SupabaseAuditRepository:
+    async def event(self, trace_id: str, sequence: int) -> dict[str, Any] | None:
+        response = await self.client.get(
+            f"{self.base}/system_events",
+            params={"select": "*", "trace_id": f"eq.{trace_id}", "sequence": f"eq.{sequence}"},
+            headers=self.headers,
+        )
+        response.raise_for_status()
+        data = response.json()
+        if not isinstance(data, list) or len(data) > 1:
+            raise RuntimeError("Malformed audit event response")
+        return data[0] if data else None
+
+    async def claim(self, trace_id: str, payload: dict[str, Any]) -> None:
+        """Immutable INSERT: UNIQUE(trace_id, sequence) arbitrates all replicas/restarts.
+
+        An HTTP error or uncertain response never authorizes submission. Never upsert/delete.
+        """
+        response = await self.client.post(
+            f"{self.base}/system_events",
+            json={"trace_id": trace_id, "sequence": 0, "kind": "submission_claimed",
+                  "payload": payload, "paper": True},
+            headers={**self.headers, "Prefer": "return=representation"},
+        )
+        response.raise_for_status()
+        data = response.json()
+        if not isinstance(data, list) or len(data) != 1 or data[0].get("sequence") != 0:
+            raise RuntimeError("Submission claim was not confirmed; execution forbidden")
+
     def __init__(self, settings: Settings, client: httpx.AsyncClient | None = None) -> None:
         if not settings.supabase_url or not settings.supabase_service_role_key:
             raise RuntimeError("Supabase server configuration is missing")

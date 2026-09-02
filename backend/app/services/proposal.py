@@ -10,19 +10,22 @@ def build_deterministic_proposal(
     underlying_price: float,
     contracts: list[OptionContract],
     quotes: dict[str, QuoteSnapshot],
+    preferred_symbol: str | None = None,
 ) -> TradeProposal:
     candidates: list[tuple[OptionContract, QuoteSnapshot]] = []
     for contract in contracts:
         quote = quotes.get(contract.symbol)
-        if not quote or not contract.tradable or quote.ask_price <= 0:
+        if not quote or not contract.tradable or contract.size != 100 or quote.ask_price <= 0:
             continue
         max_loss = quote.ask_price * 100
-        if contract.strike_price >= underlying_price and max_loss <= settings.phase1_max_risk_usd:
+        if (contract.strike_price >= underlying_price or contract.symbol == preferred_symbol) \
+                and max_loss <= settings.phase1_max_risk_usd:
             candidates.append((contract, quote))
     if not candidates:
         raise ValueError("No tradable premium-bounded SPY call candidate is available")
+    preferred = [item for item in candidates if item[0].symbol == preferred_symbol]
     contract, quote = min(
-        candidates,
+        preferred or candidates,
         key=lambda item: (abs(item[0].strike_price - underlying_price), item[1].ask_price),
     )
     trace_id = uuid5(NAMESPACE_URL, "thesiscircuit:phase1:official-opening")

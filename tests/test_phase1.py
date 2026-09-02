@@ -49,7 +49,7 @@ def proposal(data_timestamp: datetime = NOW) -> TradeProposal:
     )
     quote = QuoteSnapshot(
         symbol=contract.symbol,
-        bid_price=1.0,
+        bid_price=1.15,
         ask_price=1.2,
         timestamp=data_timestamp,
         source="alpaca:indicative",
@@ -67,6 +67,9 @@ def account(**overrides: object) -> AccountSnapshot:
         "last_equity": 100_000,
         "options_buying_power": 100_000,
         "account_number_suffix": "1234",
+        "expected_account_match": True,
+        "trading_blocked": False,
+        "options_trading_level": 2,
     }
     values.update(overrides)
     return AccountSnapshot(**values)
@@ -153,7 +156,7 @@ def test_risk_rejects_max_risk_exceeded() -> None:
 def test_risk_approves_only_complete_safe_state() -> None:
     decision = risk()
     assert decision.decision == "APPROVED"
-    assert len(decision.checks) == 17
+    assert len(decision.checks) == 18
     assert all(check.passed for check in decision.checks)
 
 
@@ -191,8 +194,12 @@ def test_timeout_queries_by_client_id_without_second_post() -> None:
     async def run() -> None:
         async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as c:
             service = OrderService(settings(), c)
-            record = await service.submit_once(proposal(), str(UUID(int=1)), risk_approved=True)
+            record = await service.submit_once(
+                proposal(datetime.now(timezone.utc)), str(UUID(int=1)), risk_approved=True,
+                stages_verified=True, submission_claimed=True,
+            )
             assert record.status == "accepted"
+            assert service.settings.execution_enabled is False
 
     asyncio.run(run())
     assert calls == {"post": 1, "get": 2}

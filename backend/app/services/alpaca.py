@@ -6,7 +6,7 @@ from typing import Any
 import httpx
 from typing_extensions import Self
 
-from backend.app.config import Settings
+from backend.app.config import PAPER_BASE_URL, Settings
 from backend.app.models import (
     AccountSnapshot,
     AssetSnapshot,
@@ -65,6 +65,7 @@ class AccountService(AlpacaClient):
     async def account(self) -> AccountSnapshot:
         data = await self._get(self.paper_base, "/v2/account")
         number = str(data.get("account_number", ""))
+        expected = self.settings.alpaca_paper_account_id
         return AccountSnapshot(
             status=str(data.get("status", "UNKNOWN")),
             cash=_as_float(data.get("cash")),
@@ -76,6 +77,12 @@ class AccountService(AlpacaClient):
             if data.get("options_buying_power") is not None
             else None,
             account_number_suffix=number[-4:] if number else "unknown",
+            expected_account_match=bool(expected) and expected.get_secret_value()
+            in (str(data.get("id", "")), number),
+            trading_blocked=data.get("trading_blocked", True)
+            or data.get("account_blocked", True)
+            or data.get("trade_suspended_by_user", True),
+            options_trading_level=data.get("options_trading_level", 0),
         )
 
     async def clock(self) -> MarketClock:
@@ -83,13 +90,13 @@ class AccountService(AlpacaClient):
 
     async def positions(self) -> list[dict[str, Any]]:
         data = await self._get(self.paper_base, "/v2/positions")
-        return data if isinstance(data, list) else []
+        return self._validated_list(data)
 
     async def open_orders(self) -> list[dict[str, Any]]:
         data = await self._get(
             self.paper_base, "/v2/orders", {"status": "open", "limit": 500, "nested": "true"}
         )
-        return data if isinstance(data, list) else []
+        return self._validated_list(data)
 
     async def all_orders(self) -> list[dict[str, Any]]:
         data = await self._get(
@@ -97,7 +104,13 @@ class AccountService(AlpacaClient):
             "/v2/orders",
             {"status": "all", "limit": 500, "nested": "true", "direction": "asc"},
         )
-        return data if isinstance(data, list) else []
+        return self._validated_list(data)
+
+    @staticmethod
+    def _validated_list(data: Any) -> list[dict[str, Any]]:
+        if not isinstance(data, list) or not all(isinstance(item, dict) for item in data):
+            raise AlpacaError("Malformed Alpaca account collection; refusing empty-state inference")
+        return data
 
 
 class MarketDataService(AlpacaClient):
@@ -122,7 +135,7 @@ class MarketDataService(AlpacaClient):
             symbol=symbol,
             bid_price=_as_float(quote.get("bp")),
             ask_price=_as_float(quote.get("ap")),
-            timestamp=quote.get("t") or datetime.now(timezone.utc),
+            timestamp=quote.get("t"),
             source="alpaca:iex",
         )
 
@@ -164,6 +177,7 @@ class MarketDataService(AlpacaClient):
                     option_type=item["type"],
                     status=item["status"],
                     tradable=bool(item["tradable"]),
+                    size=int(item.get("size", 0)),
                 )
             )
         return contracts
@@ -189,9 +203,7 @@ class MarketDataService(AlpacaClient):
                     symbol=symbol,
                     bid_price=_as_float(quote.get("bp") or quote.get("bid_price")),
                     ask_price=_as_float(quote.get("ap") or quote.get("ask_price")),
-                    timestamp=quote.get("t")
-                    or quote.get("timestamp")
-                    or datetime.now(timezone.utc),
+                    timestamp=quote.get("t") or quote.get("timestamp"),
                     source=f"alpaca:{self.settings.alpaca_market_data_feed}",
                 )
         return result
@@ -205,21 +217,62 @@ class OrderService(AlpacaClient):
                 "/v2/orders:by_client_order_id",
                 {"client_order_id": client_order_id},
             )
-        except AlpacaError:
-            return None
+        except AlpacaError as exc:
+            cause = exc.__cause__
+            if isinstance(cause, httpx.HTTPStatusError) and cause.response.status_code == 404:
+                return None
+            raise
 
     async def by_id(self, order_id: str) -> dict[str, Any]:
         return await self._get(self.paper_base, f"/v2/orders/{order_id}", {"nested": "true"})
 
     async def submit_once(
-        self, proposal: TradeProposal, risk_check_id: str, risk_approved: bool
+        self, proposal: TradeProposal, risk_check_id: str, risk_approved: bool,
+        *, stages_verified: bool = False, submission_claimed: bool = False,
     ) -> PaperOrderRecord:
         if not risk_approved:
             raise AlpacaError("A deterministic APPROVED risk decision is required")
+        if not stages_verified or not submission_claimed:
+            raise AlpacaError("Both preflight stages and a durable one-use claim are required")
+        if not self.settings.execution_enabled:
+            raise AlpacaError("Execution is disabled")
+        if (
+            self.paper_base != PAPER_BASE_URL or self.settings.trading_mode != "paper"
+            or self.settings.allow_live_trading or self.settings.live_trading_allowed
+            or not self.settings.alpaca_paper_trade
+        ):
+            raise AlpacaError("Paper-only execution configuration required")
+        age = (datetime.now(timezone.utc) - proposal.data_timestamp).total_seconds()
+        if not 0 <= age <= self.settings.phase1_max_data_age_seconds:
+            raise AlpacaError("Quote expired before submission; no order submitted")
         existing = await self.by_client_order_id(proposal.client_order_id)
         if existing:
+            self.settings.execution_enabled = False
             return self._record(existing, proposal, risk_check_id)
-        payload = {
+        payload = self.payload(proposal)
+        try:
+            response = await self.client.post(
+                f"{self.paper_base}/v2/orders", json=payload, headers=self.headers
+            )
+            # Kill the process-local gate before parsing or persisting the response.
+            self.settings.execution_enabled = False
+            response.raise_for_status()
+            data = response.json()
+        except httpx.TimeoutException as exc:
+            self.settings.execution_enabled = False
+            existing = await self.by_client_order_id(proposal.client_order_id)
+            if not existing:
+                raise AlpacaError("Order submission uncertain; reconcile client ID, never retry") from exc
+            data = existing
+        except (httpx.HTTPError, ValueError) as exc:
+            raise AlpacaError("Alpaca PAPER order submission failed; reconcile, never retry") from exc
+        finally:
+            self.settings.execution_enabled = False
+        return self._record(data, proposal, risk_check_id)
+
+    @staticmethod
+    def payload(proposal: TradeProposal) -> dict[str, str]:
+        return {
             "symbol": proposal.instrument,
             "qty": str(proposal.quantity),
             "side": "buy",
@@ -229,20 +282,6 @@ class OrderService(AlpacaClient):
             "client_order_id": proposal.client_order_id,
             "position_intent": "buy_to_open",
         }
-        try:
-            response = await self.client.post(
-                f"{self.paper_base}/v2/orders", json=payload, headers=self.headers
-            )
-            response.raise_for_status()
-            data = response.json()
-        except httpx.TimeoutException as exc:
-            existing = await self.by_client_order_id(proposal.client_order_id)
-            if not existing:
-                raise AlpacaError("Order submission timed out; no matching Alpaca order found") from exc
-            data = existing
-        except (httpx.HTTPError, ValueError) as exc:
-            raise AlpacaError("Alpaca PAPER order submission failed") from exc
-        return self._record(data, proposal, risk_check_id)
 
     @staticmethod
     def _record(data: dict[str, Any], proposal: TradeProposal, risk_check_id: str) -> PaperOrderRecord:
