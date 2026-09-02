@@ -25,6 +25,7 @@ from backend.app.services.supabase import SupabaseAuditRepository
 from risk.governor import evaluate_thesis
 
 settings = get_settings()
+configured_execution_enabled = settings.execution_enabled
 
 app = FastAPI(
     title="ThesisCircuit Paper Execution API",
@@ -66,7 +67,7 @@ async def safety() -> dict[str, object]:
         "paper_base_url": str(settings.alpaca_paper_base_url).rstrip("/"),
         "data_base_url": str(settings.alpaca_data_base_url).rstrip("/"),
         "execution_enabled": enabled,
-        "configured_execution_enabled": settings.execution_enabled,
+        "configured_execution_enabled": configured_execution_enabled,
         "allow_live_trading": settings.allow_live_trading,
         "alpaca_paper_trade": settings.alpaca_paper_trade,
         "live_trading_allowed": settings.live_trading_allowed,
@@ -212,11 +213,14 @@ async def phase1_market(symbol: str) -> dict[str, Any]:
 @app.post("/phase1/preflight", response_model=Phase1Preflight)
 @app.post("/phase1/preflight/readiness", response_model=Phase1Preflight)
 async def phase1_preflight() -> Phase1Preflight:
+    if configured_execution_enabled:
+        raise HTTPException(status_code=423, detail="Railway execution must be disabled before readiness")
     try:
         async with SupabaseAuditRepository(settings) as repository:
             return await TwoStagePreflight(repository, _build_preflight).readiness()
     except (AlpacaError, ValueError, PreflightBlocked, httpx.HTTPError) as exc:
-        raise HTTPException(status_code=409, detail=str(exc)) from exc
+        detail = str(exc) or f"Readiness integration failed ({type(exc).__name__}); execution not authorized"
+        raise HTTPException(status_code=409, detail=detail) from exc
 
 
 def _authorize_execution(token: str | None) -> None:
@@ -405,7 +409,7 @@ async def phase1_reconcile() -> dict[str, Any]:
         await repository.insert("system_events", {
             "trace_id": existing["trace_id"], "sequence": 5, "kind": "execution_shutdown",
             "payload": {"execution_enabled": await _execution_enabled(),
-                        "configured_execution_enabled": settings.execution_enabled}, "paper": True,
+                        "configured_execution_enabled": configured_execution_enabled}, "paper": True,
         }, on_conflict="trace_id,sequence")
         return {"paper": True, "order": existing, "position": position}
 

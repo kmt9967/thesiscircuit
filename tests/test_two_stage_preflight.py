@@ -260,3 +260,74 @@ def test_claim_disables_after_restart_even_if_environment_true(monkeypatch):
     with TestClient(main.app) as client:
         assert client.get("/safety").json()["execution_enabled"] is False
         assert client.get("/health").json()["orders"] == "disabled"
+
+
+def test_complete_route_sequence_submits_only_once(monkeypatch):
+    config = settings(execution_enabled=False)
+    repository = MemoryAudit()
+    writes = []
+
+    class PaperBroker:
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, *_):
+            return None
+
+        async def submit_once(self, item, risk_id, **proof):
+            assert config.execution_enabled
+            assert proof == {"risk_approved": True, "stages_verified": True,
+                             "submission_claimed": True}
+            assert 0 in repository.events
+            writes.append(item.client_order_id)
+            return OrderService._record(
+                {"id": "paper-only-test", "status": "filled", "qty": "1",
+                 "filled_qty": "1", "filled_avg_price": "1.20",
+                 "submitted_at": datetime.now(timezone.utc).isoformat(),
+                 "filled_at": datetime.now(timezone.utc).isoformat()}, item, risk_id,
+            )
+
+    monkeypatch.setattr(main, "settings", config)
+    monkeypatch.setattr(main, "SupabaseAuditRepository", lambda _: repository)
+    monkeypatch.setattr(main, "_build_preflight", builder_for(config))
+    monkeypatch.setattr(main, "OrderService", lambda _: PaperBroker())
+    headers = {"X-Phase1-Authorization": "one-shot-token"}
+    with TestClient(main.app) as client:
+        ready = client.post("/phase1/preflight/readiness").json()
+        assert ready["result"] == "READY_FOR_EXECUTION"
+        config.execution_enabled = True
+        final = client.post("/phase1/preflight/execution", headers=headers,
+                            params={"readiness_id": ready["receipt_id"]}).json()
+        params = {"readiness_id": ready["receipt_id"], "execution_id": final["receipt_id"]}
+        response = client.post("/phase1/execute", headers=headers, params=params)
+        assert response.status_code == 200
+        assert response.json()["order"]["status"] == "filled"
+        assert config.execution_enabled is False
+        assert repository.rows["orders"]["filled_average_price"] == 1.2
+        config.execution_enabled = True  # Emulate a restarted process with stale environment.
+        assert client.post("/phase1/execute", headers=headers, params=params).status_code == 409
+        assert config.execution_enabled is False
+    assert len(writes) == 1
+
+
+def test_readiness_timeout_returns_a_nonempty_safe_error(monkeypatch):
+    repository = MemoryAudit()
+
+    async def timeout(*args):
+        raise httpx.ReadTimeout("")
+    repository.event = timeout
+    monkeypatch.setattr(main, "SupabaseAuditRepository", lambda _: repository)
+    with TestClient(main.app) as client:
+        result = client.post("/phase1/preflight/readiness")
+        assert result.status_code == 409
+        assert "ReadTimeout" in result.json()["detail"]
+        assert "not authorized" in result.json()["detail"]
+
+
+def test_readiness_requires_environment_disabled_even_after_local_shutdown(monkeypatch):
+    monkeypatch.setattr(main, "configured_execution_enabled", True)
+    monkeypatch.setattr(main, "settings", settings(execution_enabled=False))
+    with TestClient(main.app) as client:
+        result = client.post("/phase1/preflight/readiness")
+        assert result.status_code == 423
+        assert "Railway execution must be disabled" in result.json()["detail"]

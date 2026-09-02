@@ -37,6 +37,14 @@ that contract before considering any replacement. The two-stage fix is implement
 and tested locally. Deployment and actual execution results must be recorded below
 only after production verification; no test fixture represents an executed order.
 
+September 2, 16:05:12 UTC: deployed readiness returned READY_FOR_EXECUTION with all
+18 gates passing, same SPY Sep 4 768 call, fresh $2.06/$2.07 bid/ask, proposed $2.07
+DAY limit and $207 premium loss bound. Account identity matched; cash/equity $100,000,
+zero positions/orders; execution remained false. Supabase stored the readiness
+receipt. Execution preflight and order remain pending server-only token setup.
+See `evidence/phase-1/2026-09-02-two-stage-readiness.json`. This evidence expires as
+authorization and must not be reused without fresh checks.
+
 ## Limitations
 
 Basic indicative options data may differ from OPRA. A limit order may remain unfilled or be rejected. ThesisCircuit will report actual Alpaca state and will not submit a second opening or closing order automatically.

@@ -4,7 +4,12 @@ ThesisCircuit is a paper-only autonomous options research system for the Alpaca 
 
 ## Phase 1 controlled execution
 
-Phase 1 adds a deliberately narrow proof path: real Alpaca market data → one deterministic long-call proposal → 17 fail-closed risk gates → one idempotent Alpaca PAPER order → Supabase audit → live dashboard. The order path is disabled by default, requires a server-only authorization token, accepts SPY only, limits size to one contract and simulated maximum loss to $250, and never submits a closing order.
+Phase 1 adds a deliberately narrow proof path: real Alpaca market data → deterministic
+long-call proposal → disabled-state readiness → fresh enabled-state execution approval
+→ one-use submission claim → at most one Alpaca PAPER order → Supabase audit → live
+dashboard. Both stages enforce 18 fail-closed gates. The order path requires a
+server-only authorization token, accepts SPY only, limits size to one contract and
+maximum premium loss to $250, and never submits a closing order.
 
 The official judging-account window begins August 31, 2026 at 9:30 a.m. ET. Before that timestamp, the hackathon-rules gate rejects execution even if every other configuration is valid.
 
@@ -41,6 +46,7 @@ Run checks from the repository root:
 ```powershell
 python -m pytest
 python scripts/safety_audit.py
+python scripts/secret_scan.py
 cd frontend
 npm run lint
 npm run build
@@ -59,5 +65,7 @@ npm run build
 
 ## Current phase
 
-Phase 0 establishes repository isolation, official-rule provenance, paper-only controls, cloud-ready configuration, tests, and a reviewable PR. Trading remains disabled.
+Phase 0 is complete. Phase 1 two-stage readiness has been verified in production;
+the single order remains unsubmitted pending server-only execution authorization.
+Execution is disabled. See [docs/PHASE-1-EXECUTION.md](docs/PHASE-1-EXECUTION.md).
 

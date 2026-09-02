@@ -10,5 +10,8 @@ assert.match(dashboard, /execution_enabled \? "ENABLED" : "DISABLED"/);
 assert.match(dashboard, /No Alpaca order/);
 assert.match(dashboard, /No paper position/);
 assert.match(dashboard, /No executed proposal/);
+assert.match(dashboard, /Readiness approval is not an executed trade/);
+assert.doesNotMatch(dashboard, /The official trading window has not opened/);
+assert.doesNotMatch(dashboard, /Zero opening orders have been submitted/);
 
 console.log("Phase 1 frontend safety and empty-state checks passed.");

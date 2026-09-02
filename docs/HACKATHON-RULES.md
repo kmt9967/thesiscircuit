@@ -4,6 +4,14 @@ Rechecked on 2026-08-30 PKT from the official Lablab event page, the official Al
 
 ## Execution-critical rules
 
+September 2, 2026 update: the linked official Alpaca FAQ was reread in full. It now
+clarifies that scoring uses portfolio equity as of end-of-day Thursday September 3,
+including exercises/assignments for options expiring that day, while retaining the
+Friday September 4 9:30 a.m. ET measurement-end language. This does not prohibit the
+September 2 controlled options test. Other execution-critical rules below remain
+unchanged. This recheck was of the official FAQ; no claim is made here that every
+new Discord message was re-inspected.
+
 - PAPER trading only; no real funds are involved.
 - All strategies must incorporate options trading.
 - Build an autonomous agent using Alpaca Trading API and use MCP or CLI; an official SDK is acceptable when the reason is documented and official SDKs are prioritized.
@@ -35,4 +43,3 @@ Paper trading is hypothetical, involves no actual securities transaction or real
 - https://lablab.ai/ai-hackathons/alpaca-ai-trading-agents-hackathon
 - LABLAB.AI Discord channel `official-updates-alpaca-ai-trading-agents-hackathon`
 - https://docs.google.com/document/d/13XWsMvW3mFm26xGlBLvdzzJ_eZQ33T4ZrP-vd9eat50/edit
-
