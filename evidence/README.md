@@ -17,4 +17,4 @@ Classifications: VERIFIED means observed directly; CONFIGURED means a setting wa
 # Phase 2.5
 
 See [durable order dispatch verification](phase-2.5/README.md). Synthetic protocol records are
-not actual Alpaca orders. Production verification remains explicitly marked pending until run.
+not actual Alpaca orders. Production migration, access controls and synthetic lifecycle results are recorded there.

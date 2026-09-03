@@ -5,7 +5,7 @@ Every recovery after that transition is GET-only, including a broker 404.
 """
 from datetime import datetime, timezone
 from decimal import Decimal
-from uuid import UUID
+from uuid import UUID, uuid4
 
 import httpx
 
@@ -40,7 +40,7 @@ def normalize_order(raw: dict, intent: OrderIntent) -> tuple[str, dict]:
         raise ValueError("Broker terms mismatch")
     qty = Decimal(str(raw["filled_qty"]))
     price = Decimal(str(raw["filled_avg_price"])) if raw.get("filled_avg_price") is not None else None
-    if (not qty.is_finite() or not 0 <= qty <= intent.quantity
+    if (not qty.is_finite() or qty != qty.to_integral_value() or not 0 <= qty <= intent.quantity
             or (qty > 0 and (price is None or not price.is_finite() or price <= 0))):
         raise ValueError("Malformed broker fill")
     status = raw["status"]
@@ -95,6 +95,25 @@ class OrderReconciliationService:
         except (httpx.HTTPError, ValueError, TypeError, KeyError, ArithmeticError):
             return await self.repository.advance(record.id, owner, "UNKNOWN", error="RECONCILIATION_REQUIRED")
         return await self.repository.advance(record.id, owner, status, broker=broker)
+
+    async def recover(self) -> list[IntentState]:
+        """Bounded restart scan; no submission capability and no execution token needed.
+
+        Live claims are left alone. Expired never-sent cycles are fenced/expired in SQL;
+        all spent claims use client-ID lookup only. UNKNOWN retains the global barrier.
+        """
+        results = []
+        for record in await self.repository.unresolved():
+            if record.document.classification != "PAPER":
+                raise RuntimeError("Recovery scan returned a non-broker fixture")
+            if record.claim_expires_at and record.claim_expires_at > datetime.now(timezone.utc):
+                continue
+            owner = uuid4()
+            claimed = await OrderClaimService(self.repository).claim(record.id,owner)
+            if claimed.status in SPENT:
+                results.append(await self.reconcile(claimed,owner))
+            # Unspent records can only be dispatched by their current authorized cycle owner.
+        return results
 
 
 class PaperOrderDispatcher:

@@ -67,6 +67,10 @@ The read-only `/phase2/order-dispatch-verification` endpoint reports this labell
 It is not a market preflight, trading signal, actual broker order, or financial-performance report.
 Restarting the same completed batch must skip all writes and preserve event counts.
 
+The approved production migration and initial synthetic batch passed on 2026-09-03. Two
+explicitly synthetic records completed with no broker calls; one waited through real claim expiry.
+The service-role RPC checks and anonymous-denial checks passed in the production database.
+
 ## Validation and remaining activation work
 
 Unit tests inject HTTP failures, process cancellation, lost DB acknowledgments, concurrency,

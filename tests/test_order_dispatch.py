@@ -38,6 +38,9 @@ class Store:
     async def get(self, identity):
         return self.rows[identity].model_copy(deep=True)
 
+    async def unresolved(self):
+        return [r.model_copy(deep=True) for r in self.rows.values() if r.status not in TERMINAL]
+
     async def rpc(self, name, payload):
         from uuid import UUID
         identity, owner = UUID(payload["intent_id"]), UUID(payload["worker"])
@@ -83,8 +86,8 @@ def intent():
 
 def raw_order(i, status="filled"):
     return {"id":str(uuid4()), "client_order_id":i.client_order_id, "symbol":i.contracts[0],
-        "qty":"1", "side":i.side, "type":"limit", "time_in_force":"day", "limit_price":str(i.limit_price),
-        "status":status, "filled_qty":"1" if status == "filled" else ("0.5" if status == "partially_filled" else "0"),
+        "qty":str(i.quantity), "side":i.side, "type":"limit", "time_in_force":"day", "limit_price":str(i.limit_price),
+        "status":status, "filled_qty":str(i.quantity) if status == "filled" else ("1" if status == "partially_filled" else "0"),
         "filled_avg_price":"1.84" if status in {"filled","partially_filled"} else None,
         "submitted_at":NOW.isoformat(), "filled_at":NOW.isoformat() if status == "filled" else None}
 
@@ -98,6 +101,14 @@ class Harness:
     def __init__(self, mode="filled"):
         self.i, self.store, self.cfg = intent(), Store(), authorized()
         self.owner, self.provider, self.mode = uuid4(), Provider(), mode
+        if mode == "partially_filled":
+            from backend.app.phase2.authorization import exit_preflight
+            from backend.app.phase2.models import ExitProposal
+            from tests.test_phase2 import option, position
+            self.provider.current=state(positions=[position(qty=2,cost_basis=368)])
+            p=ExitProposal(timestamp=NOW,contract=option(),quantity=2,limit_price=1.8,rationale="Synthetic partial exit")
+            risk=exit_preflight(p,self.provider.current,self.cfg,Policy(),NOW,self.cfg.phase2_execution_token.get_secret_value())
+            self.i=make_intent(uuid4(),p,risk,NOW)
         self.posts, self.gets, self.existing = 0, 0, None
         self.broker = AlpacaClient.__new__(AlpacaClient)
         self.broker.headers = {}
@@ -214,7 +225,7 @@ def test_fail_closed_before_http_post(failure):
 
 
 @pytest.mark.parametrize("field,value",[("client_order_id","different"),("symbol","OTHER"),
-    ("qty","2"),("side","sell"),("limit_price","99"),("filled_qty","NaN"),
+    ("qty","2"),("side","sell"),("limit_price","99"),("filled_qty","NaN"),("filled_qty","0.5"),
     ("filled_avg_price",None),("filled_at",None),("id","not-uuid")])
 def test_malformed_identity_or_fill_rejected(field,value):
     i=intent(); raw=raw_order(i); raw[field]=value
@@ -239,4 +250,53 @@ def test_unknown_barrier_prevents_another_logical_intent():
         with pytest.raises(RuntimeError):
             await h.d.dispatch(other,uuid4(),h.cfg.phase2_execution_token.get_secret_value())
         assert h.posts==1
+    asyncio.run(run())
+
+
+def test_selected_cycle_requires_allocator_and_approved_risk():
+    from backend.app.phase2.engine import run_cycle
+    from backend.app.phase2.order_intents import OrderIntentService
+    cycle=run_cycle(state(),Settings(),Policy(),"synthetic-selection",0,[],[],NOW)
+    assert OrderIntentService.selected(cycle).proposal_id == cycle.allocation.proposal_id
+    cycle.allocation.decision="NO_TRADE"
+    with pytest.raises(ValueError): OrderIntentService.selected(cycle)
+
+
+def test_delayed_final_db_ack_never_posts():
+    async def run():
+        h=Harness()
+        calls=0
+        def clock():
+            nonlocal calls
+            calls+=1
+            return NOW if calls==1 else NOW+timedelta(seconds=3)
+        h.d.clock=clock
+        record=await h.run()
+        assert record.status=="UNKNOWN" and h.posts==0 and record.attempt_count==1
+        await h.run()
+        assert h.posts==0
+    asyncio.run(run())
+
+
+def test_restart_scan_reconciles_with_execution_disabled_and_never_posts():
+    async def run():
+        h=Harness("crash_after_call")
+        with pytest.raises(asyncio.CancelledError): await h.run()
+        h.store.rows[h.i.id].owner_id=None  # Simulate expired claim; SQL expiry is tested separately.
+        h.cfg.execution_enabled=h.cfg.autonomous_trading_enabled=False
+        result=await h.d.reconciliation.recover()
+        assert len(result)==1 and result[0].status=="FILLED" and h.posts==1
+        assert await h.d.reconciliation.recover()==[] and h.posts==1
+    asyncio.run(run())
+
+
+def test_restart_scan_skips_another_workers_live_claim():
+    from datetime import datetime, timezone
+    async def run():
+        h=Harness()
+        await h.store.persist(h.i,h.owner)
+        await h.d.claims.claim(h.i.id,h.owner)
+        h.store.rows[h.i.id].claim_expires_at=datetime.now(timezone.utc)+timedelta(seconds=30)
+        assert await h.d.reconciliation.recover()==[]
+        assert h.posts==h.gets==0
     asyncio.run(run())

@@ -117,6 +117,16 @@ class OrderIntentService(SupabaseAuditRepository):
             raise RuntimeError("Intent collection malformed or ambiguous")
         return IntentState.model_validate(rows[0]) if rows else None
 
+    async def unresolved(self) -> list[IntentState]:
+        response = await self.client.get(f"{self.base}/phase2_order_intents", headers=self.headers,
+            params={"select":"*", "document->>classification":"eq.PAPER",
+                    "status":"not.in.(FILLED,CANCELED,REJECTED,EXPIRED)", "limit":101})
+        response.raise_for_status()
+        rows = response.json()
+        if not isinstance(rows,list) or len(rows)>100:
+            raise RuntimeError("Unresolved intent scan is malformed or exceeds bounded recovery budget")
+        return [IntentState.model_validate(row) for row in rows]
+
     async def advance(self, intent_id: UUID, owner: UUID, status: str, *,
                       broker: dict | None = None, error: str | None = None,
                       preflight: dict | None = None) -> IntentState:

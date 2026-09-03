@@ -39,6 +39,33 @@ def main():
         raise RuntimeError("Unexpected SQL contention failure")
     print("PASS: eight independent PostgreSQL sessions, exactly one claim winner; zero broker calls")
 
+    # PAPER-labelled protocol fixtures exist only in this disposable CI database.
+    # No broker transport is present. Verify the cross-intent barrier and lost-cycle fencing.
+    cycle, worker = str(uuid4()), str(uuid4())
+    result=sql(f"set role service_role; select public.phase2_acquire_lease('{worker}',180,'{cycle}');")
+    if result.returncode or "t" not in result.stdout.splitlines(): raise RuntimeError("CI cycle lease failed")
+    ids=[]
+    for _ in range(2):
+        identity=str(uuid4()); ids.append(identity)
+        document.update(id=identity, cycle_id=cycle, proposal_id=identity,risk_decision_id=identity,
+                        client_order_id=f"tc-p2-{identity}",classification="PAPER",proposal={"id":identity},
+                        risk={"proposal_id":identity,"decision":"APPROVED","checks":[{"passed":True}]})
+        payload=json.dumps(document).replace("'", "''")
+        result=sql(f"set role service_role; select public.phase2_create_order_intent('{payload}'::jsonb,'{worker}');")
+        if result.returncode: raise RuntimeError("CI PAPER protocol fixture failed")
+    result=sql(f"set role service_role; select public.phase2_claim_order_intent('{ids[0]}','{worker}');")
+    if result.returncode: raise RuntimeError("First paper claim failed")
+    result=sql(f"set role service_role; select public.phase2_claim_order_intent('{ids[1]}','{worker}');")
+    if result.returncode==0 or "phase2_one_active_paper_intent" not in result.stderr:
+        raise RuntimeError("Account-wide intent barrier failed")
+    # Emulate time passing in isolated CI fixtures, never in a production database.
+    result=sql(f"update public.phase2_cycle_lease set expires_at=clock_timestamp()-interval '1 second' where singleton;"
+               f"update public.phase2_order_intents set claim_expires_at=clock_timestamp()-interval '1 second' where id='{ids[0]}';"
+               f"set role service_role; select public.phase2_claim_order_intent('{ids[0]}','{uuid4()!s}')->>'status';")
+    if result.returncode or "EXPIRED" not in result.stdout.splitlines():
+        raise RuntimeError("Never-sent orphan did not release the account barrier")
+    print("PASS: account-wide PAPER intent exclusion and abandoned pre-send cycle recovery; zero broker calls")
+
 
 if __name__ == "__main__":
     main()
