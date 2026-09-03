@@ -1,7 +1,7 @@
 # Phase 2.6 Part 1 — bounded coordinator
 
-Status: implemented, CI-verified and deployed disabled. New production database objects and
-synthetic session verification await explicit Supabase approval. No trading authority
+Status: implemented, CI-verified and deployed disabled. The explicitly approved production
+migration and seven synthetic scenarios passed on September 3, 2026. No trading authority
 is granted by this implementation, deployment, or PR.
 
 ## Finite authorization
@@ -66,8 +66,8 @@ One primary SPY thesis/exposure, spread/liquidity and DTE gates remain unchanged
 
 ## Synthetic verification and current production boundary
 
-`PHASE26_SYNTHETIC_BATCH` defaults empty. Only after the new migration is approved
-and verified may this non-secret server variable trigger four labelled SYNTHETIC
+`PHASE26_SYNTHETIC_BATCH` defaults empty. The approved production value is
+`phase26-part1-20260903-a`. This non-secret server variable triggers four labelled SYNTHETIC
 sessions: one-budget candidate, existing-position monitoring, UNKNOWN kill, and expiry.
 The fixture market clock, quotes, account and fills are artificial—not live data or
 actual broker results. Synthetic intents retain a null real Alpaca order reference.
@@ -75,10 +75,17 @@ The runner imports no broker transport, modifies no historical position/research
 and cannot run with either execution flag enabled. It uses a local synthetic cycle
 lease adapter while exercising durable session cycles/budgets and real intent RPCs;
 distributed real-cycle leasing remains independently covered by Phase 2/2.5 tests.
+Three additional protocol sessions verify an eight-worker final-slot race (one winner),
+separate opening/closing/total budgets, and an expired-session reservation denial.
+All 14 budget-test intents end REJECTED locally in the database with attempt count zero;
+no broker request, cancellation or position modification occurs. The closing-budget
+fixture is SYNTHETIC and grants no rights over the real SPY position. The UNKNOWN
+fixture is reclaimed by a new worker and remains UNKNOWN with its one budget slot
+spent. Seven synthetic sessions and zero PAPER sessions exist after the run.
 Completed deterministic batch IDs are skipped on restart without rewriting evidence.
 Read-only output: `/phase2/session-verification`; no public activation/execute route.
 
 Part 2 readiness requires green tests, verified production migration/access controls,
-completed synthetic cases, unchanged broker order count, and a separate explicit
-operator-approved finite PAPER session. Production startup still refuses enabled
+completed synthetic cases and unchanged broker order count. Any later PAPER execution
+also requires a separate explicit operator-approved finite session. Production startup still refuses enabled
 execution flags. Part 1 does not remove that interlock or create a Phase 2 token.

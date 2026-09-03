@@ -21,5 +21,5 @@ not actual Alpaca orders. Production migration, access controls and synthetic li
 
 ## Phase 2.6 Part 1
 
-See [bounded coordinator verification](phase-2.6/README.md). New session schema and
-production synthetic cases remain approval-gated; no autonomous execution is enabled.
+See [bounded coordinator verification](phase-2.6/README.md). Approved session schema
+and production synthetic cases are verified; no autonomous execution is enabled.
