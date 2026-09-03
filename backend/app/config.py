@@ -40,6 +40,7 @@ class Settings(BaseSettings):
     phase1_execution_token: SecretStr | None = None
     phase2_dry_run_batch: str = ""
     phase25_synthetic_batch: str = ""
+    phase26_synthetic_batch: str = ""
     autonomous_trading_enabled: bool = False
     phase2_execution_token: SecretStr | None = None
     phase2_cycle_seconds: int = Field(default=60, ge=60, le=3600)

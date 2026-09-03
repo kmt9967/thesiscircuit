@@ -39,9 +39,14 @@ def main() -> None:
         if "/v2/orders\"" in source and path.name != "order_dispatch.py":
             raise SystemExit(f"Unexpected Phase 2 broker submission path: {path.name}")
     dispatch = (ROOT / "backend/app/phase2/order_dispatch.py").read_text(encoding="utf-8")
-    if dispatch.count("self.broker.client.post(") != 1 or '"SUBMITTING"' not in dispatch:
+    if dispatch.count("self.broker.client.post(") != 1 or "await self.session_gate.submit(" not in dispatch:
         raise SystemExit("Expected one durable Phase 2 submission boundary")
-    for name in ("engine.py", "data.py", "order_dry_run.py", "outcomes.py"):
+    session_gate = (ROOT / "backend/app/phase2/execution_sessions.py").read_text(encoding="utf-8")
+    session_sql = (ROOT / "database/migrations/006_phase2_execution_sessions.sql").read_text(encoding="utf-8")
+    if ('"SUBMIT",preflight' not in session_gate or
+        "phase2_advance_order_intent(intent_id,worker,'SUBMITTING'" not in session_sql):
+        raise SystemExit("Session budget and irreversible submit transition must share one DB transaction")
+    for name in ("engine.py", "data.py", "order_dry_run.py", "session_dry_run.py", "outcomes.py"):
         source = (ROOT / "backend/app/phase2" / name).read_text(encoding="utf-8")
         if "PaperOrderDispatcher" in source or "order_dispatch import" in source:
             raise SystemExit(f"Dry-run/advisory code imported broker capability: {name}")

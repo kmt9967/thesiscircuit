@@ -15,6 +15,7 @@ from backend.app.phase2.authorization import (
     execution_preflight,
     exit_preflight,
 )
+from backend.app.phase2.execution_sessions import SessionDenied
 from backend.app.phase2.models import Cycle, ExitProposal
 from backend.app.phase2.order_intents import (
     SPENT,
@@ -118,14 +119,17 @@ class OrderReconciliationService:
 
 class PaperOrderDispatcher:
     def __init__(self, repository: OrderIntentService, broker: AlpacaClient, provider,
-                 settings: Settings, policy: Policy, clock=None):
+                 settings: Settings, policy: Policy, clock=None, session_gate=None):
         self.repository, self.broker, self.provider = repository, broker, provider
         self.settings, self.policy = settings, policy
+        self.session_gate = session_gate
         self.clock = clock or (lambda: datetime.now(timezone.utc))
         self.claims = OrderClaimService(repository)
         self.reconciliation = OrderReconciliationService(repository, broker)
 
     def authorize(self, token: str | None):
+        if self.session_gate is None:
+            raise RuntimeError("A durable execution-session budget gate is mandatory")
         s = self.settings
         if (s.trading_mode != "paper" or not s.alpaca_paper_trade or s.allow_live_trading
                 or s.live_trading_allowed or str(s.alpaca_paper_base_url).rstrip("/") != PAPER_BASE_URL
@@ -152,6 +156,10 @@ class PaperOrderDispatcher:
         record = await self.claims.claim(intent.id, cycle_owner)
         if record.status in SPENT:
             return await self.reconciliation.reconcile(record, cycle_owner)
+        try:
+            await self.session_gate.reserve(intent,cycle_owner)
+        except SessionDenied:
+            return await self.repository.advance(intent.id,cycle_owner,"REJECTED",error="FINAL_PREFLIGHT_REJECTED")
         # A conflicting pre-existing CID is reconciled, never posted a second time.
         try:
             existing = await self.reconciliation.lookup(intent)
@@ -161,6 +169,7 @@ class PaperOrderDispatcher:
             return await self.reconciliation.reconcile(record, cycle_owner)
         state = await self.provider.refresh()
         now = self.clock()
+        await self.session_gate.validate(intent,state,now)
         if any(not 0 <= (now - stamp).total_seconds() <= 120
                for stamp in (intent.created_at, intent.risk_approved_at)):
             return await self.repository.advance(intent.id, cycle_owner, "REJECTED", error="STALE_INTENT_OR_RISK")
@@ -180,8 +189,8 @@ class PaperOrderDispatcher:
                                                   preflight=preflight.model_dump(mode="json"))
         self.authorize(token)
         # Atomic, fenced, non-replayable authorization. A lost ACK means NO HTTP call.
-        await self.repository.advance(intent.id, cycle_owner, "SUBMITTING",
-            preflight={"at": now.isoformat(), **preflight.model_dump(mode="json")})
+        await self.session_gate.submit(intent,cycle_owner,
+            {"at": now.isoformat(), **preflight.model_dump(mode="json")})
         # No await between the final local checks and issuing the sole HTTP request.
         self.authorize(token)
         if not 0 <= (self.clock() - now).total_seconds() <= 2:

@@ -15,6 +15,9 @@ the [one-page Alpaca technical story](docs/ALPACA-TECH-STORY.md). Both execution
 remain disabled. [Phase 2.5](docs/PHASE-2.5-ORDER-DISPATCH.md) adds an isolated durable
 order dispatcher, immutable intent claims and restart reconciliation. Its production synthetic
 verification is complete; no current research loop or frontend can activate broker execution.
+[Phase 2.6 Part 1](docs/PHASE-2.6-COORDINATOR.md) adds a finite execution-session
+coordinator and atomic session budgets. Its new Supabase migration and production
+synthetic verification are pending separate approval; broker execution remains unavailable.
 The Strategy Arena, Decision Council and Shadow Desk show recorded real-data
 research, not fabricated performance. Finite operator-configured batches run three
 cycles and stop. The existing SPY paper position remains untouched.

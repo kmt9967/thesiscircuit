@@ -31,6 +31,7 @@ configured_execution_enabled = settings.execution_enabled
 PHASE1_RETIRED = True
 phase2_batch_status: dict[str, Any] = {"status": "not_configured", "execution_enabled": False}
 phase25_status: dict[str, Any] = {"status": "not_configured", "classification": "SYNTHETIC", "broker_calls": 0}
+phase26_status: dict[str, Any] = {"status": "not_configured", "classification": "SYNTHETIC", "broker_calls": 0}
 
 
 @asynccontextmanager
@@ -70,7 +71,23 @@ async def lifespan(app: FastAPI):
         except (httpx.HTTPError, RuntimeError, ValueError, TypeError, KeyError) as exc:
             phase25_status.update(status="blocked", error_type=type(exc).__name__)
     synthetic = asyncio.create_task(synthetic_verification()) if settings.phase25_synthetic_batch else None
+    async def session_verification():
+        from backend.app.phase2.execution_sessions import ExecutionSessionService
+        from backend.app.phase2.order_intents import OrderIntentService
+        from backend.app.phase2.session_dry_run import run_session_verification
+        phase26_status["status"] = "running"
+        try:
+            async with ExecutionSessionService(settings) as sessions, OrderIntentService(settings) as intents:
+                result = await run_session_verification(sessions,intents,settings,settings.phase26_synthetic_batch)
+            phase26_status.update(result)
+        except (httpx.HTTPError, RuntimeError, ValueError, TypeError, KeyError) as exc:
+            phase26_status.update(status="blocked", error_type=type(exc).__name__)
+    bounded = asyncio.create_task(session_verification()) if settings.phase26_synthetic_batch else None
     yield
+    if bounded:
+        bounded.cancel()
+        with suppress(asyncio.CancelledError):
+            await bounded
     if synthetic:
         synthetic.cancel()
         with suppress(asyncio.CancelledError):
@@ -136,6 +153,10 @@ async def safety() -> dict[str, object]:
         "autonomous_trading_enabled": settings.autonomous_trading_enabled,
         "phase2_dispatch_available": False,
         "phase25_dispatch_implemented": True,
+        "phase26_bounded_coordinator_implemented": True,
+        "phase26_active_paper_session": False,
+        "manage_existing_position": True,
+        "allow_position_exit": False,
     }
 
 
@@ -143,6 +164,12 @@ async def safety() -> dict[str, object]:
 async def order_dispatch_verification() -> dict[str, Any]:
     """Read-only labelled synthetic verification. Never a submission endpoint."""
     return phase25_status
+
+
+@app.get("/phase2/session-verification")
+async def session_verification_status() -> dict[str, Any]:
+    """Synthetic fixtures only; no activation or submission endpoint exists."""
+    return phase26_status
 
 
 @app.get("/integrations")

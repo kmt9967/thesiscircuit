@@ -38,6 +38,9 @@ jobs:
           psql -v ON_ERROR_STOP=1 -f database/migrations/005_phase2_order_intents.sql
           psql -v ON_ERROR_STOP=1 -f database/checks/phase25_order_verification.sql
           python scripts/phase25_sql_concurrency.py
+          psql -v ON_ERROR_STOP=1 -f database/migrations/006_phase2_execution_sessions.sql
+          psql -v ON_ERROR_STOP=1 -f database/checks/phase26_session_access.sql
+          python scripts/phase26_sql_sessions.py
 
   backend:
     runs-on: ubuntu-latest

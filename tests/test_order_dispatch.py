@@ -97,6 +97,23 @@ class Provider:
     async def refresh(self): return self.current.model_copy(deep=True)
 
 
+class ProtocolBudgetGate:
+    """One-slot test adapter for the older order-protocol failure suite.
+
+    Real PostgreSQL session budget semantics are tested separately in Phase 2.6.
+    """
+    def __init__(self, store): self.store,self.reserved=store,set()
+    async def reserve(self, intent, owner):
+        if self.reserved and intent.id not in self.reserved:
+            from backend.app.phase2.execution_sessions import SessionDenied
+            raise SessionDenied("ORDER_BUDGET_EXHAUSTED")
+        self.reserved.add(intent.id)
+    async def validate(self, intent, state, now): pass
+    async def submit(self, intent, owner, preflight):
+        assert intent.id in self.reserved
+        return await self.store.advance(intent.id,owner,"SUBMITTING",preflight=preflight)
+
+
 class Harness:
     def __init__(self, mode="filled"):
         self.i, self.store, self.cfg = intent(), Store(), authorized()
@@ -113,7 +130,8 @@ class Harness:
         self.broker = AlpacaClient.__new__(AlpacaClient)
         self.broker.headers = {}
         self.broker.client = httpx.AsyncClient(transport=httpx.MockTransport(self.handle))
-        self.d = PaperOrderDispatcher(self.store,self.broker,self.provider,self.cfg,Policy(),clock=lambda:NOW)
+        self.d = PaperOrderDispatcher(self.store,self.broker,self.provider,self.cfg,Policy(),clock=lambda:NOW,
+                                      session_gate=ProtocolBudgetGate(self.store))
 
     def handle(self, request):
         assert request.url.host == "paper-api.alpaca.markets"
