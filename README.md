@@ -1,53 +1,95 @@
 # ThesisCircuit
 
-ThesisCircuit is a paper-only options research project for the Alpaca AI Trading Agents
-Hackathon. Phase 1 proves a single controlled deterministic execution with an auditable
-risk decision. Phase 2 Part 1 implements a deterministic three-agent research
-committee with critic, risk vetoes, counterfactual tracking and position recommendations.
-Production rests with both execution flags disabled. A bounded, server-startup-only
-activation path now exists for a separately approved immutable session; there is no
-frontend activation control, and the Phase 1 authorization mechanism is retired.
+> **AI strategies compete. Risk decides. Sometimes the best trade is no trade.**
 
-## Phase 2 research
+ThesisCircuit is an autonomous options research and paper-execution system built for the Alpaca AI Trading Agents Hackathon. Three deterministic strategy agents independently interpret live Alpaca market and options data, a critic challenges their assumptions, and a fail-closed risk governor decides whether any proposal can advance. Every decision is preserved as an auditable event.
 
-See [Phase 2 architecture and risk policy](docs/PHASE-2-ARCHITECTURE.md).
-Part 2 validation is described in [Phase 2 readiness](docs/PHASE-2.md) and
-the [one-page Alpaca technical story](docs/ALPACA-TECH-STORY.md). Both execution gates
-remain disabled. [Phase 2.5](docs/PHASE-2.5-ORDER-DISPATCH.md) adds an isolated durable
-order dispatcher, immutable intent claims and restart reconciliation. Its production synthetic
-verification is complete; no current research loop or frontend can activate broker execution.
-[Phase 2.6 Part 1](docs/PHASE-2.6-COORDINATOR.md) adds a finite execution-session
-coordinator and atomic session budgets. Its additive Supabase migration and seven
-production synthetic scenarios are verified. The final readiness layer uses the official
-`alpaca-py` SDK, supports independently evaluated SPY and QQQ states, and forces both
-Railway execution flags off at every terminal session outcome.
-The Strategy Arena, Decision Council and Shadow Desk show recorded real-data
-research, not fabricated performance. Finite operator-configured batches run three
-cycles and stop. The existing SPY paper position remains untouched.
+- **Live dashboard:** https://thesiscircuit.vercel.app/
+- **Production API:** https://thesiscircuit-production.up.railway.app/
+- **Public source:** https://github.com/kmt9967/thesiscircuit
 
-## Phase 1 controlled execution
+## Why it matters
 
-Phase 1 adds a deliberately narrow proof path: real Alpaca market data → deterministic
-long-call proposal → disabled-state readiness → fresh enabled-state execution approval
-→ one-use submission claim → at most one Alpaca PAPER order → Supabase audit → live
-dashboard. Both historical stages enforced 18 fail-closed gates. The order path required a
-server-only authorization token, accepts SPY only, limits size to one contract and
-maximum premium loss to $250, and never submits a closing order.
+Most trading-agent demos optimize for generating a trade. ThesisCircuit optimizes for making a defensible decision. It separates research, risk approval, durable broker intent, and execution authority so an agent cannot talk its way around a rejection. No-trade outcomes are first-class results rather than failures.
 
-The official judging-account window begins August 31, 2026 at 9:30 a.m. ET. Before that timestamp, the hackathon-rules gate rejects execution even if every other configuration is valid.
+## How it works
 
-## Safety contract
+```mermaid
+flowchart LR
+    A[Alpaca market + options data] --> B[Trend agent]
+    A --> C[Range agent]
+    A --> D[Defensive agent]
+    B --> E[Decision council]
+    C --> E
+    D --> E
+    E --> F[Critic]
+    F --> G[Deterministic risk governor]
+    G -->|reject| H[Audited NO TRADE]
+    G -->|approve| I[Durable order intent]
+    I --> J[Bounded execution session]
+    J --> K[Alpaca PAPER only]
+    E --> L[Supabase audit trail]
+    G --> L
+    I --> L
+    K --> L
+    L --> M[Next.js evidence dashboard]
+```
 
-- Alpaca paper trading only; `https://paper-api.alpaca.markets` is the only accepted broker base URL.
-- `ALLOW_LIVE_TRADING=false` and `LIVE_TRADING_ALLOWED=false` are mandatory.
-- `EXECUTION_ENABLED=false` is the resting state before and after the one authorized proof.
-- Options ideas are analysis artifacts, not investment advice.
-- Paper results are hypothetical and do not guarantee future results.
-- A fresh Alpaca paper account with a $100,000 starting balance is required for final judging; credentials are never committed.
+The agent arena produces structured theses instead of free-form orders. The council and critic expose agreement and objections. The risk layer applies deterministic checks for paper mode, endpoint safety, freshness, liquidity, buying power, bounded loss, conflicts, idempotency, and session budgets. Supabase locking prevents overlapping cycles and duplicate claims. Execution is impossible unless separate server-side gates and an expiring session all agree.
 
-See [PAPER-TRADING-DISCLOSURE.md](PAPER-TRADING-DISCLOSURE.md), [SECURITY.md](SECURITY.md), and [docs/HACKATHON-RULES.md](docs/HACKATHON-RULES.md).
+## Verified Alpaca PAPER result
 
-## Local development
+On September 2, 2026, ThesisCircuit proved the full pipeline with one deliberately small opening order in the dedicated $100,000 judging PAPER account:
+
+| Item | Alpaca-reported result |
+| --- | --- |
+| Contract | `SPY260904C00768000` — SPY Sep 4, 2026 $768 call |
+| Strategy | One long call; premium-bounded risk |
+| Order | Buy to open 1 contract, DAY limit at $1.88 |
+| Fill | 1 contract at $1.84 |
+| Maximum planned premium risk | $188 |
+| Additional or closing orders | 0 |
+
+At the final production observation on September 3 at 22:47 UTC, Alpaca reported account equity of **$100,397.94**, cash of **$99,815.94**, one open paper position, no open orders, and one historical order. The dashboard labels this state **ACTUAL ALPACA PAPER RESULTS**. These values are a timestamped paper-account observation, not a promise of final scoring or future performance.
+
+## What makes it different
+
+- **Risk has final authority.** LLM-style rationale cannot override a deterministic rejection.
+- **NO TRADE is observable.** Rejected ideas, critic objections, shadow outcomes, and counterfactuals remain visible without being misrepresented as broker activity.
+- **Broker writes are durable.** Atomic intent claims, reconciliation-before-retry, cycle locks, and conservative UNKNOWN-state accounting protect against duplicate orders.
+- **Autonomy is bounded.** Sessions expire, order budgets are atomic, terminal outcomes force execution flags off, and no frontend control can enable trading.
+- **Paper-only by construction.** The only accepted broker host is `paper-api.alpaca.markets`; live configuration fails closed.
+
+## Alpaca integration
+
+The backend uses the official `alpaca-py` SDK for paper account, market clock, option-contract, quote, order, and position data. Application-owned deterministic services wrap the SDK so timestamps, malformed responses, timeouts, and uncertain submissions are handled consistently. On a submission timeout, ThesisCircuit reconciles by the unique `client_order_id` before any retry. The official competition FAQ permits an official SDK when its use is explained; ThesisCircuit prioritizes `alpaca-py` because typed SDK responses sit behind its audited, transactional safety boundary.
+
+## Current capability status
+
+| Capability | Status |
+| --- | --- |
+| Live Alpaca PAPER account and options data | **VERIFIED** |
+| One controlled end-to-end PAPER opening order | **VERIFIED** |
+| Supabase audit, locking, durable intents, and session budgets | **VERIFIED** |
+| Strategy arena, critic, risk vetoes, replay, and shadow analysis | **VERIFIED** |
+| Production bounded-session activation and shutdown | **SYNTHETICALLY VERIFIED** with 0 broker calls |
+| Autonomous broker execution | **NOT ACTIVATED** |
+| Live trading | **PROHIBITED / NOT CREATED** |
+
+Production rests with `EXECUTION_ENABLED=false`, `AUTONOMOUS_TRADING_ENABLED=false`, `ALLOW_LIVE_TRADING=false`, `TRADING_MODE=paper`, and `ALPACA_PAPER_TRADE=true`.
+
+## Reliability and evidence
+
+The repository includes replay fixtures, database migrations, fail-closed configuration tests, eight-worker atomic-claim and budget races, restart recovery, stale-lock expiry, uncertain-order reconciliation, browser checks, and sanitized production evidence. The final validation suite passes **256 backend tests**, Ruff, Python compilation, frontend typecheck, UI checks, production build, tracked-secret scanning, live-endpoint scanning, and the paper-safety audit.
+
+- [One-page submission write-up](submission/ONE-PAGE-WRITEUP.md)
+- [Alpaca technical story](docs/ALPACA-TECH-STORY.md)
+- [Phase 1 execution record](docs/PHASE-1-EXECUTION.md)
+- [Phase 2 architecture](docs/PHASE-2-ARCHITECTURE.md)
+- [Risk policy](docs/RISK-POLICY.md)
+- [Sanitized final evidence](evidence/final-submission/README.md)
+
+## Run locally
 
 ```powershell
 python -m venv .venv
@@ -64,33 +106,19 @@ npm install
 npm run dev
 ```
 
-Run checks from the repository root:
+Validate from the repository root:
 
 ```powershell
-python -m pytest
-python scripts/safety_audit.py
-python scripts/secret_scan.py
+.\.venv\Scripts\python.exe -m pytest
+.\.venv\Scripts\python.exe -m ruff check .
+.\.venv\Scripts\python.exe scripts/safety_audit.py
+.\.venv\Scripts\python.exe scripts/secret_scan.py
 cd frontend
 npm run lint
+npm test
 npm run build
 ```
 
-## Repository map
+## Disclosure
 
-- `frontend/` — Next.js judge-facing dashboard for safety, architecture, rules, and replay evidence.
-- `backend/` — FastAPI read-only analysis API.
-- `agents/` — committee roles and auditable votes.
-- `strategies/` — options thesis generation without execution.
-- `risk/` — deterministic fail-closed policy engine.
-- `replay/` — reproducible decision-event replay.
-- `database/` — Supabase-compatible schema.
-- `docs/`, `evidence/`, `submission/` — rule provenance, verification, and submission material.
-
-## Current phase
-
-Phase 0 and the Phase 1 controlled execution proof are complete. On September 2,
-one SPY Sep 4 $768 call was submitted with a $1.88 DAY limit and filled at $1.84.
-The one-contract paper position remains open. Execution is disabled, the one-use
-claim is consumed, and no further order or Phase 2 activity is authorized.
-See [docs/PHASE-1-EXECUTION.md](docs/PHASE-1-EXECUTION.md) for the actual audit and limits.
-
+**SIMULATED PAPER TRADING — NO REAL FUNDS.** Results are hypothetical and are not investment advice. Options carry significant risk, and all investments involve risk. Repository and infrastructure scaffolding preceded parts of the official scoring window; the controlled order, autonomous architecture, production verification, and their timestamps are documented in Git history and sanitized evidence. No live brokerage account or live API credential was created.

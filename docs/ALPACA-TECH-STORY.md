@@ -16,6 +16,12 @@ paper/data hosts, redirects disabled, ten-second timeouts and its retry counter 
 The sole SDK submission call remains behind the database-fenced dispatcher; uncertainty is
 resolved by client-order-ID reads and never by a second submission.
 
+The actual infrastructure proof used one `SPY260904C00768000` long call. Alpaca PAPER filled
+one contract at $1.84 after a $1.88 DAY limit submission with $188 planned maximum premium
+risk. The final September 3 22:47 UTC read reported $100,397.94 equity, one position, zero
+open orders and one historical order. Those are timestamped broker observations, not shadow
+returns or a claim about Alpaca's final judging snapshot.
+
 This SDK choice follows the official FAQ: MCP or CLI are permitted, and an SDK is permitted
 when the engineering reason is explained and official SDKs are prioritized. The reason is
 that ThesisCircuit needs a deterministic in-process transaction boundary between Supabase's
@@ -40,3 +46,7 @@ launcher has no browser or frontend route. Every completion, expiry, kill, unkno
 dispatcher failure or competition-window closure drives both local gates false and uses a
 single-environment Railway project token to persist and read back both encrypted variables as
 false. No session is authorized by this implementation work; resting production remains NO ORDER.
+
+Final-submission preparation performed read-only production checks only. Execution and
+autonomous trading remain disabled, the existing position was not changed or closed, and no
+additional broker order was submitted.
