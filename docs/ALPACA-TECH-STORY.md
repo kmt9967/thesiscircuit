@@ -24,5 +24,6 @@ ask-entry/later-bid marks explain avoided hypothetical losses and missed opportu
 pretending they were orders. Shrunken agent scores prevent a lucky sample from dominating.
 
 Future autonomous execution requires separate server-only authorization, both execution gates,
-fresh final risk checks and a yet-to-be-reviewed durable broker dispatcher. There is no browser
-execution toggle. Until separately authorized and implemented, all research remains NO ORDER.
+fresh final risk checks and a bounded server coordinator. Phase 2.5 implements an isolated durable
+intent/claim/dispatcher library with synthetic-only production verification. There is no browser
+execution toggle. Until a bounded activation is separately authorized, all research remains NO ORDER.

@@ -10,8 +10,10 @@ Implemented: Trend/Range/Defensive policies, Critic, MetaAllocator, 24-gate entr
 bounded read-only orchestration, Supabase audit, shadows/scoring/reflection, portfolio dashboard,
 pure future entry/exit authorization checks and fail-closed tests.
 
-Not implemented: continuous autonomous broker dispatch, durable Phase 2 submission claims,
-restart/timeout order reconciliation, autonomous exits, execution credential provisioning,
+Phase 2.5 subsequently implemented durable submission claims and restart/timeout reconciliation,
+verified using labelled synthetic records with zero broker calls. See [Phase 2.5](PHASE-2.5-ORDER-DISPATCH.md).
+
+Not activated: continuous autonomous broker dispatch, autonomous exits, execution credential provisioning,
 exact-horizon historical options backtests or statistically meaningful performance validation.
 Therefore the system is NOT yet ready to enable autonomous PAPER orders. It is ready for
 controlled read-only dry-run validation. Both execution flags remain false.

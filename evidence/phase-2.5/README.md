@@ -30,10 +30,20 @@
 - At initial implementation commit df6580b, real PostgreSQL CI and an eight-session contention
   test passed with exactly one winner. Later CI also tests cross-intent exclusion/orphan recovery.
 
-## Remaining verification for final commit
+## Deployment restart and final verification
 
-- Railway/Vercel deployment-restart replay check at the completed commit.
-- Final CI and fresh read-only broker-order count/disabled flag verification.
+- At implementation commit `477011a`, Railway deployment `1fb2a5b0-3458-4453-a262-47c2bc351cfd`
+  and Vercel deployment `Dr6kWo27A8DGDJyfELfpQcqyWXb7` succeeded.
+- [Restart result](production-synthetic-restarted.json): both records returned
+  replayed_without_writes=true. Full audit event arrays matched the initial result exactly (8/9 events).
+- CI run `33705810971` passed all three jobs, including real PostgreSQL protocol/permissions,
+  eight independent claim workers (one winner), account-wide PAPER exclusion and pre-send orphan expiry.
+- [Production health](production-health.json), checked at 2026-09-03T02:00:14Z: Railway healthy,
+  Alpaca PAPER ACTIVE/connected, Supabase connected, Vercel production READY/HTTP 200.
+- Vercel runtime error/fatal query for this deployment over the preceding hour returned no entries.
+  This is a log-query result, not proof of comprehensive monitoring coverage.
+- Historical Alpaca orders=1, open orders=0, existing long SPY contract quantity=1 unchanged.
+  New orders=0; no close/modify/cancel. Execution and autonomous flags both false, live flags false.
 
 ## Activation boundary
 

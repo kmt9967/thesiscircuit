@@ -12,6 +12,12 @@ a global database research lease, strict future authorization/exit schemas and o
 See [Autonomy boundary](docs/AUTONOMY.md). Neither the Phase 2 token checker nor an
 APPROVED risk result grants order capability. Both execution flags remain disabled.
 
+Phase 2.5 adds server-only OrderIntentService, OrderClaimService, OrderReconciliationService
+and PaperOrderDispatcher. Immutable Supabase intents and one-use SUBMITTING claims prevent
+retries from creating duplicate broker requests. UNKNOWN requires reconciliation, not resend.
+The library remains disconnected from production execution triggers. See
+[the durable order protocol](docs/PHASE-2.5-ORDER-DISPATCH.md).
+
 ## Planned multi-agent decision circuit (not activated)
 
 1. Market/research inputs become an immutable `ThesisRequest`.

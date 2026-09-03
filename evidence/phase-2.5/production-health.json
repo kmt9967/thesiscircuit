@@ -1,0 +1,79 @@
+{
+  "verified_commit": "477011acb5888f50a324a513ad52ba958bccff06",
+  "observed_at": "2026-09-03T02:00:14.232149Z",
+  "health": {
+    "status": "ok",
+    "mode": "paper",
+    "orders": "disabled"
+  },
+  "safety": {
+    "paper_base_url": "https://paper-api.alpaca.markets",
+    "data_base_url": "https://data.alpaca.markets",
+    "execution_enabled": false,
+    "configured_execution_enabled": false,
+    "allow_live_trading": false,
+    "alpaca_paper_trade": true,
+    "live_trading_allowed": false,
+    "order_submission_enabled": false,
+    "competition_starting_balance": 100000,
+    "one_shot": true,
+    "phase1_authorization_retired": true,
+    "phase2_mode": "DRY_RUN",
+    "phase2_execution_authorized": false,
+    "autonomous_trading_enabled": false,
+    "phase2_dispatch_available": false,
+    "phase25_dispatch_implemented": true
+  },
+  "integrations": {
+    "alpaca": {
+      "configured": true,
+      "connected": true,
+      "paper": true,
+      "account_status": "ACTIVE",
+      "starting_cash": 99815.97,
+      "open_orders": 0,
+      "orders_placed": 1
+    },
+    "supabase": {
+      "configured": true,
+      "connected": true,
+      "status_code": 200
+    }
+  },
+  "total_historical_orders": 1,
+  "new_orders_this_task": 0,
+  "position": [
+    {
+      "symbol": "SPY260904C00768000",
+      "qty": 1,
+      "side": "long",
+      "entry": 1.84,
+      "current_price": 1.64,
+      "market_value": 164,
+      "cost_basis": 184,
+      "unrealized_pl": -20,
+      "unrealized_plpc": -0.1087,
+      "asset_class": "us_option"
+    }
+  ],
+  "market_open": false,
+  "vercel": {
+    "url": "https://thesiscircuit.vercel.app/",
+    "deployment_id": "dpl_Dr6kWo27A8DGDJyfELfpQcqyWXb7",
+    "status": "READY",
+    "http_status": 200,
+    "runtime_error_logs_last_hour": 0
+  },
+  "railway_deployment": "1fb2a5b0-3458-4453-a262-47c2bc351cfd",
+  "ci_run": "33705810971",
+  "backend_tests": 186,
+  "supabase": {
+    "table": "phase2_order_intents",
+    "rls": true,
+    "table_acl": "postgres administrator; service_role SELECT",
+    "function_acl": "postgres owner and service_role EXECUTE only",
+    "synthetic_rows": 2,
+    "historical_orders": 1,
+    "historical_cycles": 6
+  }
+}

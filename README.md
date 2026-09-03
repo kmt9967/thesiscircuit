@@ -12,7 +12,9 @@ and the Phase 1 token's authorization mechanism is retired.
 See [Phase 2 architecture and risk policy](docs/PHASE-2-ARCHITECTURE.md).
 Part 2 validation is described in [Phase 2 readiness](docs/PHASE-2.md) and
 the [one-page Alpaca technical story](docs/ALPACA-TECH-STORY.md). Both execution gates
-remain disabled. Pure authorization checks are not a broker dispatcher.
+remain disabled. [Phase 2.5](docs/PHASE-2.5-ORDER-DISPATCH.md) adds an isolated durable
+order dispatcher, immutable intent claims and restart reconciliation. Its production synthetic
+verification is complete; no current research loop or frontend can activate broker execution.
 The Strategy Arena, Decision Council and Shadow Desk show recorded real-data
 research, not fabricated performance. Finite operator-configured batches run three
 cycles and stop. The existing SPY paper position remains untouched.
