@@ -91,3 +91,9 @@ Part 2 readiness requires green tests, verified production migration/access cont
 completed synthetic cases and unchanged broker order count. Any later PAPER execution
 also requires a separate explicit operator-approved finite session. Production startup still refuses enabled
 execution flags. Part 1 does not remove that interlock or create a Phase 2 token.
+
+Part 2: see [pre-authorization proposal](PHASE-2.6-PREAUTHORIZATION.md).
+Long-cadence waits now recheck durable status and authorization every <=60 seconds
+until due, rather than finishing prematurely after one sleep. Three 20-minute-spaced
+monitor cycles are unit-tested with advancing time and zero intents. Production
+activation/shutdown wiring and integration-rule compliance remain explicit blockers.

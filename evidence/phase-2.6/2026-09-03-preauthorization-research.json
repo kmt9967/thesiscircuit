@@ -1,0 +1,973 @@
+{
+  "classification": "VERIFIED_READ_ONLY_PRODUCTION_RESEARCH_NOT_EXECUTION_AUTHORIZATION",
+  "batch": {
+    "status": "completed",
+    "execution_enabled": false,
+    "cycle_ids": [
+      "60bc0a68-236e-53ec-87e4-d799a3d1d999",
+      "670ebffd-8841-5e5d-a54a-d957af00c647",
+      "7956784a-4290-5bbc-bf9d-323f2d3dd8ca"
+    ]
+  },
+  "batch_name": "phase26-preauthorization-20260903-a",
+  "verified_cycles": [
+    {
+      "id": "7956784a-4290-5bbc-bf9d-323f2d3dd8ca",
+      "created_at": "2026-09-03T16:24:40.758149+00:00",
+      "decision": "NO_TRADE"
+    },
+    {
+      "id": "670ebffd-8841-5e5d-a54a-d957af00c647",
+      "created_at": "2026-09-03T16:23:36.528266+00:00",
+      "decision": "NO_TRADE"
+    },
+    {
+      "id": "60bc0a68-236e-53ec-87e4-d799a3d1d999",
+      "created_at": "2026-09-03T16:22:33.210087+00:00",
+      "decision": "NO_TRADE"
+    }
+  ],
+  "latest_cycle": {
+    "id": "7956784a-4290-5bbc-bf9d-323f2d3dd8ca",
+    "mode": "DRY_RUN",
+    "risk": [
+      {
+        "checks": [
+          {
+            "name": "paper_only",
+            "passed": true,
+            "reason": "Paper mode and both live flags disabled"
+          },
+          {
+            "name": "paper_endpoint",
+            "passed": true,
+            "reason": "Exact paper execution host only"
+          },
+          {
+            "name": "dry_run_gate",
+            "passed": true,
+            "reason": "Research requires both execution gates disabled"
+          },
+          {
+            "name": "account",
+            "passed": true,
+            "reason": "Dedicated active options-enabled account; finite account values"
+          },
+          {
+            "name": "competition_window",
+            "passed": true,
+            "reason": "Official competition time bounds"
+          },
+          {
+            "name": "market",
+            "passed": true,
+            "reason": "Open market and fresh broker clock"
+          },
+          {
+            "name": "state_fresh",
+            "passed": true,
+            "reason": "Fresh account/position/order snapshot"
+          },
+          {
+            "name": "data_fresh",
+            "passed": false,
+            "reason": "Fresh underlying and option quote; future timestamps rejected"
+          },
+          {
+            "name": "valid_options",
+            "passed": false,
+            "reason": "Active standard SPY options only"
+          },
+          {
+            "name": "proposal",
+            "passed": false,
+            "reason": "One fresh defined-risk proposal bound to the refreshed contract snapshot"
+          },
+          {
+            "name": "max_new_risk",
+            "passed": false,
+            "reason": "Maximum new risk $500.00"
+          },
+          {
+            "name": "liquidity",
+            "passed": false,
+            "reason": "Spread <=10% and $0.15; both quote sizes >=5 or recent OI >=100"
+          },
+          {
+            "name": "expiry",
+            "passed": false,
+            "reason": "24 hours minimum to standard expiry; maximum 7 days"
+          },
+          {
+            "name": "buying_power",
+            "passed": true,
+            "reason": "Both cash and options buying power cover full premium"
+          },
+          {
+            "name": "positions_limit",
+            "passed": true,
+            "reason": "At most three open positions"
+          },
+          {
+            "name": "aggregate_risk",
+            "passed": true,
+            "reason": "Aggregate paid premium <=2% of current equity"
+          },
+          {
+            "name": "underlying_exposure",
+            "passed": false,
+            "reason": "Only one directional thesis per underlying; no hedge implementation yet"
+          },
+          {
+            "name": "duplicate_position",
+            "passed": false,
+            "reason": "Cannot add to an existing contract"
+          },
+          {
+            "name": "duplicate_order",
+            "passed": true,
+            "reason": "Unique proposal-derived future client ID; no order is constructed in Part 1"
+          },
+          {
+            "name": "conflicting_order",
+            "passed": true,
+            "reason": "No outstanding orders may reserve unknown risk"
+          },
+          {
+            "name": "known_exposure",
+            "passed": true,
+            "reason": "Reject unknown, short, non-option or malformed exposure"
+          },
+          {
+            "name": "cooldown",
+            "passed": true,
+            "reason": "15-minute minimum since any broker submission"
+          },
+          {
+            "name": "daily_loss",
+            "passed": true,
+            "reason": "Daily equity drawdown below 1%; missing baseline rejected"
+          },
+          {
+            "name": "kill_switch",
+            "passed": true,
+            "reason": "Emergency research veto is not active"
+          }
+        ],
+        "reasons": [
+          "data_fresh: Fresh underlying and option quote; future timestamps rejected",
+          "valid_options: Active standard SPY options only",
+          "proposal: One fresh defined-risk proposal bound to the refreshed contract snapshot",
+          "max_new_risk: Maximum new risk $500.00",
+          "liquidity: Spread <=10% and $0.15; both quote sizes >=5 or recent OI >=100",
+          "expiry: 24 hours minimum to standard expiry; maximum 7 days",
+          "underlying_exposure: Only one directional thesis per underlying; no hedge implementation yet",
+          "duplicate_position: Cannot add to an existing contract"
+        ],
+        "decision": "REJECTED",
+        "proposal_id": "4ac616d6-4f58-40d3-ae41-df0fa2d5326d",
+        "execution_authorized": false
+      },
+      {
+        "checks": [
+          {
+            "name": "paper_only",
+            "passed": true,
+            "reason": "Paper mode and both live flags disabled"
+          },
+          {
+            "name": "paper_endpoint",
+            "passed": true,
+            "reason": "Exact paper execution host only"
+          },
+          {
+            "name": "dry_run_gate",
+            "passed": true,
+            "reason": "Research requires both execution gates disabled"
+          },
+          {
+            "name": "account",
+            "passed": true,
+            "reason": "Dedicated active options-enabled account; finite account values"
+          },
+          {
+            "name": "competition_window",
+            "passed": true,
+            "reason": "Official competition time bounds"
+          },
+          {
+            "name": "market",
+            "passed": true,
+            "reason": "Open market and fresh broker clock"
+          },
+          {
+            "name": "state_fresh",
+            "passed": true,
+            "reason": "Fresh account/position/order snapshot"
+          },
+          {
+            "name": "data_fresh",
+            "passed": false,
+            "reason": "Fresh underlying and option quote; future timestamps rejected"
+          },
+          {
+            "name": "valid_options",
+            "passed": false,
+            "reason": "Active standard SPY options only"
+          },
+          {
+            "name": "proposal",
+            "passed": false,
+            "reason": "One fresh defined-risk proposal bound to the refreshed contract snapshot"
+          },
+          {
+            "name": "max_new_risk",
+            "passed": false,
+            "reason": "Maximum new risk $500.00"
+          },
+          {
+            "name": "liquidity",
+            "passed": false,
+            "reason": "Spread <=10% and $0.15; both quote sizes >=5 or recent OI >=100"
+          },
+          {
+            "name": "expiry",
+            "passed": false,
+            "reason": "24 hours minimum to standard expiry; maximum 7 days"
+          },
+          {
+            "name": "buying_power",
+            "passed": true,
+            "reason": "Both cash and options buying power cover full premium"
+          },
+          {
+            "name": "positions_limit",
+            "passed": true,
+            "reason": "At most three open positions"
+          },
+          {
+            "name": "aggregate_risk",
+            "passed": true,
+            "reason": "Aggregate paid premium <=2% of current equity"
+          },
+          {
+            "name": "underlying_exposure",
+            "passed": false,
+            "reason": "Only one directional thesis per underlying; no hedge implementation yet"
+          },
+          {
+            "name": "duplicate_position",
+            "passed": false,
+            "reason": "Cannot add to an existing contract"
+          },
+          {
+            "name": "duplicate_order",
+            "passed": true,
+            "reason": "Unique proposal-derived future client ID; no order is constructed in Part 1"
+          },
+          {
+            "name": "conflicting_order",
+            "passed": true,
+            "reason": "No outstanding orders may reserve unknown risk"
+          },
+          {
+            "name": "known_exposure",
+            "passed": true,
+            "reason": "Reject unknown, short, non-option or malformed exposure"
+          },
+          {
+            "name": "cooldown",
+            "passed": true,
+            "reason": "15-minute minimum since any broker submission"
+          },
+          {
+            "name": "daily_loss",
+            "passed": true,
+            "reason": "Daily equity drawdown below 1%; missing baseline rejected"
+          },
+          {
+            "name": "kill_switch",
+            "passed": true,
+            "reason": "Emergency research veto is not active"
+          }
+        ],
+        "reasons": [
+          "data_fresh: Fresh underlying and option quote; future timestamps rejected",
+          "valid_options: Active standard SPY options only",
+          "proposal: One fresh defined-risk proposal bound to the refreshed contract snapshot",
+          "max_new_risk: Maximum new risk $500.00",
+          "liquidity: Spread <=10% and $0.15; both quote sizes >=5 or recent OI >=100",
+          "expiry: 24 hours minimum to standard expiry; maximum 7 days",
+          "underlying_exposure: Only one directional thesis per underlying; no hedge implementation yet",
+          "duplicate_position: Cannot add to an existing contract"
+        ],
+        "decision": "REJECTED",
+        "proposal_id": "1e9a59e2-ba48-4afa-bfff-88ff6c4814c9",
+        "execution_authorized": false
+      },
+      {
+        "checks": [
+          {
+            "name": "paper_only",
+            "passed": true,
+            "reason": "Paper mode and both live flags disabled"
+          },
+          {
+            "name": "paper_endpoint",
+            "passed": true,
+            "reason": "Exact paper execution host only"
+          },
+          {
+            "name": "dry_run_gate",
+            "passed": true,
+            "reason": "Research requires both execution gates disabled"
+          },
+          {
+            "name": "account",
+            "passed": true,
+            "reason": "Dedicated active options-enabled account; finite account values"
+          },
+          {
+            "name": "competition_window",
+            "passed": true,
+            "reason": "Official competition time bounds"
+          },
+          {
+            "name": "market",
+            "passed": true,
+            "reason": "Open market and fresh broker clock"
+          },
+          {
+            "name": "state_fresh",
+            "passed": true,
+            "reason": "Fresh account/position/order snapshot"
+          },
+          {
+            "name": "data_fresh",
+            "passed": false,
+            "reason": "Fresh underlying and option quote; future timestamps rejected"
+          },
+          {
+            "name": "valid_options",
+            "passed": false,
+            "reason": "Active standard SPY options only"
+          },
+          {
+            "name": "proposal",
+            "passed": false,
+            "reason": "One fresh defined-risk proposal bound to the refreshed contract snapshot"
+          },
+          {
+            "name": "max_new_risk",
+            "passed": false,
+            "reason": "Maximum new risk $500.00"
+          },
+          {
+            "name": "liquidity",
+            "passed": false,
+            "reason": "Spread <=10% and $0.15; both quote sizes >=5 or recent OI >=100"
+          },
+          {
+            "name": "expiry",
+            "passed": false,
+            "reason": "24 hours minimum to standard expiry; maximum 7 days"
+          },
+          {
+            "name": "buying_power",
+            "passed": true,
+            "reason": "Both cash and options buying power cover full premium"
+          },
+          {
+            "name": "positions_limit",
+            "passed": true,
+            "reason": "At most three open positions"
+          },
+          {
+            "name": "aggregate_risk",
+            "passed": true,
+            "reason": "Aggregate paid premium <=2% of current equity"
+          },
+          {
+            "name": "underlying_exposure",
+            "passed": false,
+            "reason": "Only one directional thesis per underlying; no hedge implementation yet"
+          },
+          {
+            "name": "duplicate_position",
+            "passed": false,
+            "reason": "Cannot add to an existing contract"
+          },
+          {
+            "name": "duplicate_order",
+            "passed": true,
+            "reason": "Unique proposal-derived future client ID; no order is constructed in Part 1"
+          },
+          {
+            "name": "conflicting_order",
+            "passed": true,
+            "reason": "No outstanding orders may reserve unknown risk"
+          },
+          {
+            "name": "known_exposure",
+            "passed": true,
+            "reason": "Reject unknown, short, non-option or malformed exposure"
+          },
+          {
+            "name": "cooldown",
+            "passed": true,
+            "reason": "15-minute minimum since any broker submission"
+          },
+          {
+            "name": "daily_loss",
+            "passed": true,
+            "reason": "Daily equity drawdown below 1%; missing baseline rejected"
+          },
+          {
+            "name": "kill_switch",
+            "passed": true,
+            "reason": "Emergency research veto is not active"
+          }
+        ],
+        "reasons": [
+          "data_fresh: Fresh underlying and option quote; future timestamps rejected",
+          "valid_options: Active standard SPY options only",
+          "proposal: One fresh defined-risk proposal bound to the refreshed contract snapshot",
+          "max_new_risk: Maximum new risk $500.00",
+          "liquidity: Spread <=10% and $0.15; both quote sizes >=5 or recent OI >=100",
+          "expiry: 24 hours minimum to standard expiry; maximum 7 days",
+          "underlying_exposure: Only one directional thesis per underlying; no hedge implementation yet",
+          "duplicate_position: Cannot add to an existing contract"
+        ],
+        "decision": "REJECTED",
+        "proposal_id": "e5b64be3-3f47-4f39-bc22-37b3e6afb4fc",
+        "execution_authorized": false
+      }
+    ],
+    "batch": "phase26-preauthorization-20260903-a",
+    "marks": [
+      {
+        "agent": "RANGE",
+        "source": "alpaca:indicative",
+        "shadow_id": "2c1fd968-685b-4d06-8d82-ce727b95e9e5",
+        "timestamp": "2026-09-03T16:24:40.170515Z",
+        "mark_basis": "Later observed bid; not an executed fill or exact horizon return",
+        "risk_return": 1.630718954248366,
+        "bid_reference": 8.05,
+        "classification": "COUNTERFACTUAL",
+        "decision_regret": 499,
+        "elapsed_minutes": 1387.29,
+        "horizon_complete": true,
+        "hypothetical_pnl": 499,
+        "rejection_effect": "HURT"
+      }
+    ],
+    "paper": true,
+    "state": {
+      "timestamp": "2026-09-03T16:24:39.051721Z",
+      "account": {
+        "cash": 99815.94,
+        "equity": 100369.94,
+        "status": "ACTIVE",
+        "last_equity": 99986.94,
+        "buying_power": 399263.76,
+        "portfolio_value": 100369.94,
+        "trading_blocked": false,
+        "options_buying_power": 99815.94,
+        "options_trading_level": 3,
+        "expected_account_match": true
+      },
+      "clock": {
+        "is_open": true,
+        "next_open": "2026-09-04T09:30:00-04:00",
+        "timestamp": "2026-09-03T12:24:39.279910-04:00",
+        "next_close": "2026-09-03T16:00:00-04:00"
+      },
+      "features": {
+        "atr": 0.1378571428571474,
+        "gap": -0.006089826559668721,
+        "rsi": 52.15686274510001,
+        "vwap": 770.1053374444889,
+        "price": 772.51,
+        "source": "alpaca:iex:1Min",
+        "volume": 2727,
+        "samples": 174,
+        "support": 772.38,
+        "ema_fast": 772.6268280497128,
+        "ema_slow": 772.6721363656486,
+        "return_1m": 0.000058248280057737745,
+        "timestamp": "2026-09-03T16:24:39.559977Z",
+        "resistance": 773.08,
+        "return_20m": -0.0006079656434734293,
+        "bar_timestamp": "2026-09-03T16:23:00Z",
+        "intraday_range": 5.829999999999927,
+        "trend_strength": -0.328661359119876,
+        "relative_volume": 0.9243754449001729,
+        "realized_volatility": 0.04751035216536327
+      },
+      "positions": [
+        {
+          "qty": 1,
+          "side": "long",
+          "entry": 1.84,
+          "symbol": "SPY260904C00768000",
+          "cost_basis": 184,
+          "asset_class": "us_option",
+          "market_value": 554,
+          "current_price": 5.54,
+          "unrealized_pl": 370,
+          "unrealized_plpc": 2.01087
+        }
+      ],
+      "orders": [
+        {
+          "symbol": "SPY260904C00768000",
+          "status": "filled",
+          "submitted_at": "2026-09-02T16:21:20.530421Z",
+          "paper_mode": true
+        }
+      ],
+      "options_observed": 80,
+      "observations": [
+        {
+          "ask": 8.21,
+          "bid": 8.07,
+          "kind": "call",
+          "vega": 0.0923,
+          "delta": 0.8546,
+          "gamma": 0.0315,
+          "theta": -0.8927,
+          "expiry": "2026-09-04",
+          "source": "alpaca:indicative",
+          "strike": 765,
+          "symbol": "SPY260904C00765000",
+          "volume": null,
+          "ask_size": 60,
+          "bid_size": 29,
+          "quote_at": "2026-09-03T16:24:38.775719Z",
+          "tradable": true,
+          "multiplier": 100,
+          "underlying": "SPY",
+          "open_interest": 6507,
+          "implied_volatility": 0.1795,
+          "open_interest_date": "2026-09-01"
+        },
+        {
+          "ask": 5.58,
+          "bid": 5.44,
+          "kind": "call",
+          "vega": 0.1252,
+          "delta": 0.7619,
+          "gamma": 0.0476,
+          "theta": -1.0647,
+          "expiry": "2026-09-04",
+          "source": "alpaca:indicative",
+          "strike": 768,
+          "symbol": "SPY260904C00768000",
+          "volume": null,
+          "ask_size": 2,
+          "bid_size": 37,
+          "quote_at": "2026-09-03T16:24:38.233623Z",
+          "tradable": true,
+          "multiplier": 100,
+          "underlying": "SPY",
+          "open_interest": 3136,
+          "implied_volatility": 0.161,
+          "open_interest_date": "2026-09-01"
+        }
+      ],
+      "data_errors": []
+    },
+    "regime": {
+      "name": "LOW_VOLATILITY",
+      "metrics": {
+        "rsi": 52.15686274510001,
+        "ema_fast": 772.6268280497128,
+        "ema_slow": 772.6721363656486,
+        "return_20m": -0.0006079656434734293,
+        "trend_strength": -0.328661359119876,
+        "realized_volatility": 0.04751035216536327
+      },
+      "timestamp": "2026-09-03T16:24:40.758149Z",
+      "confidence": 0.6,
+      "invalidation": "Recompute each cycle; stale input or threshold reversal invalidates regime"
+    },
+    "scores": [
+      {
+        "agent": "TREND",
+        "basis": "First later observed completed horizon; neutral prior with n/(n+20) shrinkage; no executed attribution",
+        "score": 50,
+        "shadow_pnl": null,
+        "shadow_samples": 0,
+        "executed_samples": 0,
+        "no_trade_quality": null,
+        "score_components": {
+          "reliability": 0,
+          "neutral_prior": 50,
+          "executed_outcome": null,
+          "executed_drawdown": null,
+          "counterfactual_efficiency": 0,
+          "counterfactual_hit_balance": 0
+        },
+        "executed_drawdown": null,
+        "executed_hit_rate": null,
+        "executed_risk_return": null,
+        "executed_realized_pnl": null,
+        "shadow_false_positives": 0,
+        "executed_unrealized_pnl": null,
+        "executed_thesis_accuracy": null,
+        "shadow_missed_opportunities": 0,
+        "counterfactual_risk_efficiency": null,
+        "counterfactual_false_positive_rate": null
+      },
+      {
+        "agent": "RANGE",
+        "basis": "First later observed completed horizon; neutral prior with n/(n+20) shrinkage; no executed attribution",
+        "score": 50.24,
+        "shadow_pnl": 1,
+        "shadow_samples": 1,
+        "executed_samples": 0,
+        "no_trade_quality": 0,
+        "score_components": {
+          "reliability": 0.047619047619047616,
+          "neutral_prior": 50,
+          "executed_outcome": null,
+          "executed_drawdown": null,
+          "counterfactual_efficiency": 0.001556178026766262,
+          "counterfactual_hit_balance": 0.23809523809523808
+        },
+        "executed_drawdown": null,
+        "executed_hit_rate": null,
+        "executed_risk_return": null,
+        "executed_realized_pnl": null,
+        "shadow_false_positives": 0,
+        "executed_unrealized_pnl": null,
+        "executed_thesis_accuracy": null,
+        "shadow_missed_opportunities": 1,
+        "counterfactual_risk_efficiency": 0.0032679738562091504,
+        "counterfactual_false_positive_rate": 0
+      },
+      {
+        "agent": "DEFENSIVE",
+        "basis": "First later observed completed horizon; neutral prior with n/(n+20) shrinkage; no executed attribution",
+        "score": 50,
+        "shadow_pnl": null,
+        "shadow_samples": 0,
+        "executed_samples": 0,
+        "no_trade_quality": null,
+        "score_components": {
+          "reliability": 0,
+          "neutral_prior": 50,
+          "executed_outcome": null,
+          "executed_drawdown": null,
+          "counterfactual_efficiency": 0,
+          "counterfactual_hit_balance": 0
+        },
+        "executed_drawdown": null,
+        "executed_hit_rate": null,
+        "executed_risk_return": null,
+        "executed_realized_pnl": null,
+        "shadow_false_positives": 0,
+        "executed_unrealized_pnl": null,
+        "executed_thesis_accuracy": null,
+        "shadow_missed_opportunities": 0,
+        "counterfactual_risk_efficiency": null,
+        "counterfactual_false_positive_rate": null
+      }
+    ],
+    "critics": [
+      {
+        "severity": 0.95,
+        "proposal_id": "4ac616d6-4f58-40d3-ae41-df0fa2d5326d",
+        "timing_risk": "Late entry and trend reversal can invalidate the short-horizon signal",
+        "liquidity_risk": "No eligible quote",
+        "volatility_risk": "Implied volatility can fall even when direction is correct",
+        "no_trade_argument": "Preserving cash avoids premium decay and avoids concentrating existing risk",
+        "concentration_risk": "Existing SPY position: additional directional thesis prohibited",
+        "regime_contradiction": "LOW_VOLATILITY is a heuristic on a short minute-bar sample, not a forecast",
+        "expiration_theta_risk": "Time decay and automatic exercise near expiry require separate operator handling",
+        "strongest_counterargument": "Recent price direction is not evidence that movement will exceed paid premium"
+      },
+      {
+        "severity": 0.95,
+        "proposal_id": "1e9a59e2-ba48-4afa-bfff-88ff6c4814c9",
+        "timing_risk": "Late entry and trend reversal can invalidate the short-horizon signal",
+        "liquidity_risk": "No eligible quote",
+        "volatility_risk": "Implied volatility can fall even when direction is correct",
+        "no_trade_argument": "Preserving cash avoids premium decay and avoids concentrating existing risk",
+        "concentration_risk": "Existing SPY position: additional directional thesis prohibited",
+        "regime_contradiction": "LOW_VOLATILITY is a heuristic on a short minute-bar sample, not a forecast",
+        "expiration_theta_risk": "Time decay and automatic exercise near expiry require separate operator handling",
+        "strongest_counterargument": "Recent price direction is not evidence that movement will exceed paid premium"
+      },
+      {
+        "severity": 0.95,
+        "proposal_id": "e5b64be3-3f47-4f39-bc22-37b3e6afb4fc",
+        "timing_risk": "Late entry and trend reversal can invalidate the short-horizon signal",
+        "liquidity_risk": "No eligible quote",
+        "volatility_risk": "Implied volatility can fall even when direction is correct",
+        "no_trade_argument": "Preserving cash avoids premium decay and avoids concentrating existing risk",
+        "concentration_risk": "Existing SPY position: additional directional thesis prohibited",
+        "regime_contradiction": "LOW_VOLATILITY is a heuristic on a short minute-bar sample, not a forecast",
+        "expiration_theta_risk": "Time decay and automatic exercise near expiry require separate operator handling",
+        "strongest_counterargument": "Recent price direction is not evidence that movement will exceed paid premium"
+      }
+    ],
+    "shadows": [],
+    "decision": "NO_TRADE",
+    "sequence": 2,
+    "timeline": [
+      {
+        "note": "DRY_RUN",
+        "stage": "market_refresh",
+        "sequence": 0,
+        "timestamp": "2026-09-03T16:24:40.758149+00:00"
+      },
+      {
+        "note": "DRY_RUN",
+        "stage": "features",
+        "sequence": 1,
+        "timestamp": "2026-09-03T16:24:40.758149+00:00"
+      },
+      {
+        "note": "DRY_RUN",
+        "stage": "regime",
+        "sequence": 2,
+        "timestamp": "2026-09-03T16:24:40.758149+00:00"
+      },
+      {
+        "note": "DRY_RUN",
+        "stage": "strategy_agents",
+        "sequence": 3,
+        "timestamp": "2026-09-03T16:24:40.758149+00:00"
+      },
+      {
+        "note": "DRY_RUN",
+        "stage": "critic",
+        "sequence": 4,
+        "timestamp": "2026-09-03T16:24:40.758149+00:00"
+      },
+      {
+        "note": "DRY_RUN",
+        "stage": "allocation",
+        "sequence": 5,
+        "timestamp": "2026-09-03T16:24:40.758149+00:00"
+      },
+      {
+        "note": "DRY_RUN",
+        "stage": "risk_officer",
+        "sequence": 6,
+        "timestamp": "2026-09-03T16:24:40.758149+00:00"
+      },
+      {
+        "note": "NO ORDER CAPABILITY",
+        "stage": "execution_blocked",
+        "sequence": 7,
+        "timestamp": "2026-09-03T16:24:40.758149+00:00"
+      },
+      {
+        "note": "DRY_RUN",
+        "stage": "shadow_research",
+        "sequence": 8,
+        "timestamp": "2026-09-03T16:24:40.758149+00:00"
+      },
+      {
+        "note": "DRY_RUN",
+        "stage": "position_review",
+        "sequence": 9,
+        "timestamp": "2026-09-03T16:24:40.758149+00:00"
+      }
+    ],
+    "proposals": [
+      {
+        "id": "4ac616d6-4f58-40d3-ae41-df0fa2d5326d",
+        "agent": "TREND",
+        "regime": "LOW_VOLATILITY",
+        "status": "NO_TRADE",
+        "thesis": "No qualifying regime signal and liquid defined-risk contract",
+        "contract": null,
+        "evidence": {
+          "rsi": 52.15686274510001,
+          "price": 772.51,
+          "return_20m": -0.0006079656434734293,
+          "trend_strength": -0.328661359119876,
+          "realized_volatility": 0.04751035216536327
+        },
+        "quantity": 1,
+        "breakeven": null,
+        "direction": "NONE",
+        "extrinsic": null,
+        "intrinsic": null,
+        "timestamp": "2026-09-03T16:24:40.758149Z",
+        "confidence": 0,
+        "max_profit": null,
+        "underlying": "SPY",
+        "invalidation": "Recompute each cycle; stale input or threshold reversal invalidates regime",
+        "strategy_type": "NO_TRADE",
+        "holding_horizon": "Intraday research; no automatic exit is authorized",
+        "estimated_max_loss": 0,
+        "liquidity_assessment": "No eligible candidate",
+        "reasons_not_to_trade": [
+          "Signal, freshness, liquidity or budget not satisfied"
+        ]
+      },
+      {
+        "id": "1e9a59e2-ba48-4afa-bfff-88ff6c4814c9",
+        "agent": "RANGE",
+        "regime": "LOW_VOLATILITY",
+        "status": "NO_TRADE",
+        "thesis": "No qualifying regime signal and liquid defined-risk contract",
+        "contract": null,
+        "evidence": {
+          "rsi": 52.15686274510001,
+          "price": 772.51,
+          "return_20m": -0.0006079656434734293,
+          "trend_strength": -0.328661359119876,
+          "realized_volatility": 0.04751035216536327
+        },
+        "quantity": 1,
+        "breakeven": null,
+        "direction": "NONE",
+        "extrinsic": null,
+        "intrinsic": null,
+        "timestamp": "2026-09-03T16:24:40.758149Z",
+        "confidence": 0,
+        "max_profit": null,
+        "underlying": "SPY",
+        "invalidation": "Recompute each cycle; stale input or threshold reversal invalidates regime",
+        "strategy_type": "NO_TRADE",
+        "holding_horizon": "Intraday research; no automatic exit is authorized",
+        "estimated_max_loss": 0,
+        "liquidity_assessment": "No eligible candidate",
+        "reasons_not_to_trade": [
+          "Signal, freshness, liquidity or budget not satisfied"
+        ]
+      },
+      {
+        "id": "e5b64be3-3f47-4f39-bc22-37b3e6afb4fc",
+        "agent": "DEFENSIVE",
+        "regime": "LOW_VOLATILITY",
+        "status": "NO_TRADE",
+        "thesis": "No qualifying regime signal and liquid defined-risk contract",
+        "contract": null,
+        "evidence": {
+          "rsi": 52.15686274510001,
+          "price": 772.51,
+          "return_20m": -0.0006079656434734293,
+          "trend_strength": -0.328661359119876,
+          "realized_volatility": 0.04751035216536327
+        },
+        "quantity": 1,
+        "breakeven": null,
+        "direction": "NONE",
+        "extrinsic": null,
+        "intrinsic": null,
+        "timestamp": "2026-09-03T16:24:40.758149Z",
+        "confidence": 0,
+        "max_profit": null,
+        "underlying": "SPY",
+        "invalidation": "Recompute each cycle; stale input or threshold reversal invalidates regime",
+        "strategy_type": "NO_TRADE",
+        "holding_horizon": "Intraday research; no automatic exit is authorized",
+        "estimated_max_loss": 0,
+        "liquidity_assessment": "No eligible candidate",
+        "reasons_not_to_trade": [
+          "Signal, freshness, liquidity or budget not satisfied"
+        ]
+      }
+    ],
+    "allocation": {
+      "reason": "No candidate clears exposure, critic, budget and composite-quality floor",
+      "scores": {},
+      "decision": "NO_TRADE",
+      "proposal_id": null
+    },
+    "created_at": "2026-09-03T16:24:40.758149Z",
+    "reflections": [
+      {
+        "agent": "RANGE",
+        "lessons": {
+          "theta": "Observed P&L does not isolate theta",
+          "regime": "Outcome alone does not establish regime accuracy",
+          "liquidity": "Counterfactual quote is not proof of executable size",
+          "volatility": "No causal attribution without IV series",
+          "entry_timing": "Ask entry versus later bid incorporates the spread, not guaranteed fills",
+          "agent_quality": "Only completed 60-minute horizons may update the shrunken shadow score",
+          "risk_gate_value": "Rejected hypothetical outcome: HURT"
+        },
+        "expected": "A directional move sufficient to exceed premium and spread",
+        "observed": "Counterfactual bid liquidation P&L 499.00; rejection hurt",
+        "shadow_id": "2c1fd968-685b-4d06-8d82-ce727b95e9e5",
+        "timestamp": "2026-09-03T16:24:40.758149Z",
+        "hard_limits_changed": false
+      }
+    ],
+    "position_reviews": [
+      {
+        "quote": {
+          "ask": 5.58,
+          "bid": 5.44,
+          "kind": "call",
+          "vega": 0.1252,
+          "delta": 0.7619,
+          "gamma": 0.0476,
+          "theta": -1.0647,
+          "expiry": "2026-09-04",
+          "source": "alpaca:indicative",
+          "strike": 768,
+          "symbol": "SPY260904C00768000",
+          "volume": null,
+          "ask_size": 2,
+          "bid_size": 37,
+          "quote_at": "2026-09-03T16:24:38.233623Z",
+          "tradable": true,
+          "multiplier": 100,
+          "underlying": "SPY",
+          "open_interest": 3136,
+          "implied_volatility": 0.161,
+          "open_interest_date": "2026-09-01"
+        },
+        "expiry": "2026-09-04",
+        "reasons": [
+          "Monitor only; no add or close authority"
+        ],
+        "position": {
+          "qty": 1,
+          "side": "long",
+          "entry": 1.84,
+          "symbol": "SPY260904C00768000",
+          "cost_basis": 184,
+          "asset_class": "us_option",
+          "market_value": 554,
+          "current_price": 5.54,
+          "unrealized_pl": 370,
+          "unrealized_plpc": 2.01087
+        },
+        "timestamp": "2026-09-03T16:24:40.758149Z",
+        "mark_basis": "Broker-reported position value; underlying quote timestamp not supplied by broker",
+        "market_open": true,
+        "quote_fresh": true,
+        "risk_limit_ok": true,
+        "recommendation": "HOLD",
+        "hours_to_expiry": 27.588678291944444,
+        "action_authorized": false,
+        "quote_age_seconds": 2.524526,
+        "regime_compatible": true,
+        "thesis_invalidated": false,
+        "theta_daily_dollars": -106.47
+      }
+    ],
+    "execution_enabled": false
+  },
+  "bounded_execution": {
+    "activated": false,
+    "new_paper_sessions_created": 0,
+    "broker_submission_calls": 0,
+    "production_activation_available": false,
+    "note": "Research lease/batch executed. Active PAPER bounded coordinator deliberately not invoked; requires later explicit authorization and missing production activation/shutdown wiring."
+  },
+  "no_new_broker_orders": {
+    "baseline": 1,
+    "after": 1,
+    "open_orders": 0
+  }
+}

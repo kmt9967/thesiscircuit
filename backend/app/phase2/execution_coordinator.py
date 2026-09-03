@@ -63,6 +63,32 @@ class BoundedExecutionCoordinator:
         self.clock=clock or (lambda:datetime.now(timezone.utc))
         self.sleep=sleep
 
+    async def _wait_for_cadence(self, session_id, token):
+        """Wait in <=60s slices without ending a longer-cadence session early.
+
+        Durable status/expiry and authorization are inspected on every slice, also
+        after the final sleep. A stalled/backward clock fails closed, never spins.
+        """
+        while True:
+            session=await self.sessions.control(session_id)
+            if session.status!="ACTIVE": return session
+            if self.settings.phase2_emergency_kill:
+                return await self.sessions.control(session_id,"KILL","MANUAL_KILL")
+            if self.synthetic:
+                assert_dry_run(self.settings)
+            elif (not paper_configuration(self.settings) or
+                  not all(g.passed for g in authorization_gates(self.settings,token))):
+                return await self.sessions.control(session_id,"KILL","AUTHORIZATION_DENIED")
+            now=self.clock()
+            if not session.document.starts_at<=now<session.document.expires_at:
+                return await self.sessions.control(session_id,"KILL","SESSION_SCOPE")
+            if not session.next_cycle_at or now>=session.next_cycle_at: return session
+            if session.next_cycle_at>=session.document.expires_at:
+                return await self.sessions.control(session_id,"FINISH")
+            await self.sleep(min((session.next_cycle_at-now).total_seconds(),60))
+            if self.clock()<=now:
+                return await self.sessions.control(session_id,"KILL","CONFIG_MISMATCH")
+
     async def run(self, session_id, token=None) -> dict:
         report={"session_id":str(session_id),"classification":"SYNTHETIC" if self.synthetic else "PAPER",
                 "cycles":[],"existing_position_actions":[],"broker_submission_authorized":False}
@@ -98,12 +124,7 @@ class BoundedExecutionCoordinator:
             now=self.clock()
             if not session.document.starts_at<=now<session.document.expires_at: break
             if session.next_cycle_at and now<session.next_cycle_at:
-                delay=(session.next_cycle_at-now).total_seconds()
-                if now.timestamp()+delay>=session.document.expires_at.timestamp(): break
-                # Bounded waits; expiry and authorization are rechecked after sleeping.
-                await self.sleep(min(delay,60))
-                session=await self.sessions.control(session_id)
-                if self.clock()<session.next_cycle_at: break
+                session=await self._wait_for_cadence(session_id,token)
                 if session.status!="ACTIVE": break
             owner=uuid4()
             try:

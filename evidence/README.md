@@ -23,3 +23,12 @@ not actual Alpaca orders. Production migration, access controls and synthetic li
 
 See [bounded coordinator verification](phase-2.6/README.md). Approved session schema
 and production synthetic cases are verified; no autonomous execution is enabled.
+
+## Phase 2.6 Part 2
+
+- `phase-2.6/2026-09-03-preauthorization-research.json`: VERIFIED three fresh-market
+  production research cycles, NO_TRADE, unchanged SPY position and one historical
+  order. Latest cycle details and all three completion IDs are retained.
+- `../docs/PHASE-2.6-PREAUTHORIZATION.md`: PLANNED finite authorization proposal,
+  preflight design and activation/compliance blockers. Not an active PAPER session
+  or broker-execution proof.

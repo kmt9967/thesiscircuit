@@ -275,3 +275,58 @@ def test_cycle_failures_kill_without_intent(failure):
         s=await sessions.find(d.id)
         assert s.status=="KILLED" and not intents.rows and s.orders_consumed==0
     asyncio.run(run())
+
+
+def test_twenty_minute_cadence_completes_three_monitor_cycles_without_orders():
+    async def run():
+        intents=Store(); sessions=Sessions(intents); sleeps=[]
+        d=definition(classification="SYNTHETIC",entry_permission=False,
+            expires_at=NOW+timedelta(hours=1),cadence_seconds=1200,max_cycles=3)
+        await sessions.create(d); await sessions.control(d.id,"ACTIVATE")
+        async def advance(seconds):
+            sleeps.append(seconds); sessions.now+=timedelta(seconds=seconds)
+        provider=SyntheticProvider(existing=True,clock=lambda:sessions.now)
+        coordinator=BoundedExecutionCoordinator(sessions,SyntheticCycleLease(),intents,provider,
+            lambda g,p:SyntheticSessionDispatcher(intents,g,provider,Settings(),clock=lambda:sessions.now),
+            Settings(),synthetic=True,clock=lambda:sessions.now,sleep=advance)
+        result=await coordinator.run(d.id)
+        assert result["status"]=="COMPLETED" and len(result["cycles"])==3
+        assert sum(sleeps)==2400 and max(sleeps)<=60
+        assert not intents.rows and result["orders_consumed"]==0
+        assert all(not action["exit_allowed"] for action in result["existing_position_actions"])
+    asyncio.run(run())
+
+
+@pytest.mark.parametrize("failure",["expiry","kill","authorization","live","stalled_clock","backward_clock"])
+def test_cadence_wait_rechecks_terminal_state_and_authorization(failure):
+    async def run():
+        store=Store(); sessions=Sessions(store); s=row(); sessions.rows[s.id]=s
+        s.next_cycle_at=NOW+timedelta(minutes=10)
+        cfg=authorized(); token=cfg.phase2_execution_token.get_secret_value(); sleeps=[]
+        async def interrupt(seconds):
+            sleeps.append(seconds)
+            if failure=="expiry": sessions.now=s.document.expires_at
+            elif failure=="backward_clock": sessions.now-=timedelta(seconds=1)
+            elif failure!="stalled_clock": sessions.now+=timedelta(seconds=seconds)
+            if failure=="kill": cfg.phase2_emergency_kill=True
+            if failure=="authorization": cfg.autonomous_trading_enabled=False
+            if failure=="live": cfg.allow_live_trading=True
+        coordinator=BoundedExecutionCoordinator(sessions,None,store,None,None,cfg,
+            clock=lambda:sessions.now,sleep=interrupt)
+        result=await coordinator._wait_for_cadence(s.id,token)
+        assert result.status in {"KILLED","EXPIRED"} and sleeps==[60]
+        assert not store.rows
+    asyncio.run(run())
+
+
+def test_cadence_at_expiry_does_not_start_another_cycle():
+    async def run():
+        sessions=Sessions(Store()); s=row(); sessions.rows[s.id]=s
+        s.next_cycle_at=s.document.expires_at
+        async def forbidden_sleep(seconds): raise AssertionError("No sleep necessary")
+        cfg=authorized()
+        coordinator=BoundedExecutionCoordinator(sessions,None,None,None,None,cfg,
+            clock=lambda:NOW,sleep=forbidden_sleep)
+        result=await coordinator._wait_for_cadence(s.id,cfg.phase2_execution_token.get_secret_value())
+        assert result.status=="COMPLETED" and not result.cycles
+    asyncio.run(run())

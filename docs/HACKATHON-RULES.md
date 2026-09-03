@@ -4,6 +4,12 @@ Rechecked on 2026-08-30 PKT from the official Lablab event page, the official Al
 
 ## Execution-critical rules
 
+September 3, 2026 review: reread the linked official FAQ in full and checked the
+official Lablab page. No execution-critical FAQ changes from September 2 were found;
+the EOD September 3 versus September 4 09:30 ET wording remains. This does not claim
+a fresh sweep of every Discord message. The custom-httpx integration does not yet
+demonstrate the MCP/CLI or explained SDK route; see `PHASE-2.6-PREAUTHORIZATION.md`.
+
 September 2, 2026 update: the linked official Alpaca FAQ was reread in full. It now
 clarifies that scoring uses portfolio equity as of end-of-day Thursday September 3,
 including exercises/assignments for options expiring that day, while retaining the
