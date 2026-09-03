@@ -154,7 +154,7 @@ async def safety() -> dict[str, object]:
         "phase2_dispatch_available": False,
         "phase25_dispatch_implemented": True,
         "phase26_bounded_coordinator_implemented": True,
-        "phase26_active_paper_session": False,
+        "phase26_paper_session_activation_available": False,
         "manage_existing_position": True,
         "allow_position_exit": False,
     }

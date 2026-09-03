@@ -69,7 +69,7 @@ class Store:
                 r.attempt_count += 1
             r.status, r.last_error = status, error
             r.broker_state = broker or r.broker_state
-            if broker:
+            if broker and r.document.classification=="PAPER":
                 from uuid import UUID
                 r.alpaca_order_id = UUID(broker["id"])
             r.events.append({"kind":status})

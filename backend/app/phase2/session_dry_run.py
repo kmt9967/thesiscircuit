@@ -91,9 +91,26 @@ async def run_session_verification(sessions,intents,settings,batch,clock=None):
     clock=clock or (lambda:datetime.now(timezone.utc))
     reports=[]
     for case in ("one_order_budget","existing_monitor_only","unknown_consumes_budget","expired_session"):
+        expected={"one_order_budget":("COMPLETED",1),"existing_monitor_only":("COMPLETED",0),
+                  "unknown_consumes_budget":("KILLED",1),"expired_session":("EXPIRED",0)}[case]
+        async def verify_final(final,case=case,expected=expected):
+            if (final.status,final.orders_consumed)!=expected or final.closing_consumed!=0:
+                raise RuntimeError("Synthetic coordinator outcome mismatch")
+            if final.document.classification!="SYNTHETIC": raise RuntimeError("Synthetic classification mismatch")
+            if case=="unknown_consumes_budget" and final.kill_reason!="UNKNOWN_ORDER":
+                raise RuntimeError("Synthetic UNKNOWN kill not proven")
+            if len(final.reservations)!=expected[1]: raise RuntimeError("Synthetic reservation mismatch")
+            for key in final.reservations:
+                from uuid import UUID
+                record=await intents.get(UUID(key))
+                required="UNKNOWN" if case=="unknown_consumes_budget" else "FILLED"
+                if (record.status!=required or record.attempt_count!=1 or record.alpaca_order_id is not None
+                    or record.document.classification!="SYNTHETIC"):
+                    raise RuntimeError("Synthetic lifecycle incomplete; no blind restart")
         identity=uuid5(NAMESPACE_URL,f"thesiscircuit:session-synthetic:{batch}:{case}")
         saved=await sessions.find(identity)
         if saved and saved.status in {"COMPLETED","KILLED","EXPIRED"}:
+            await verify_final(saved)
             reports.append({"case":case,"session":saved.model_dump(mode="json"),"restart_skipped":True})
             continue
         now=clock()
@@ -111,9 +128,7 @@ async def run_session_verification(sessions,intents,settings,batch,clock=None):
                                                 settings,synthetic=True,clock=clock)
         report=await coordinator.run(identity)
         final=await sessions.control(identity)
-        expected={"one_order_budget":("COMPLETED",1),"existing_monitor_only":("COMPLETED",0),
-                  "unknown_consumes_budget":("KILLED",1),"expired_session":("EXPIRED",0)}[case]
-        if (final.status,final.orders_consumed)!=expected: raise RuntimeError("Synthetic coordinator outcome mismatch")
+        await verify_final(final)
         reports.append({"case":case,"session":final.model_dump(mode="json"),"coordinator":report,"restart_skipped":False})
     return {"status":"completed","classification":"SYNTHETIC","broker_calls":0,
             "execution_enabled":False,"autonomous_trading_enabled":False,"batch":batch,"cases":reports}

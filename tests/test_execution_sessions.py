@@ -239,6 +239,17 @@ def test_four_synthetic_sessions_and_terminal_restart():
     asyncio.run(run())
 
 
+def test_failed_synthetic_session_cannot_turn_green_on_restart():
+    async def run():
+        intents=Store(); sessions=Sessions(intents)
+        await run_session_verification(sessions,intents,Settings(),"failed-restart",clock=lambda:NOW)
+        first=next(iter(sessions.rows.values()))
+        first.status="KILLED"; first.kill_reason="STALE_DATA"
+        with pytest.raises(RuntimeError,match="outcome mismatch"):
+            await run_session_verification(sessions,intents,Settings(),"failed-restart",clock=lambda:NOW)
+    asyncio.run(run())
+
+
 @pytest.mark.parametrize("failure",["database","cycle_overlap","stale"])
 def test_cycle_failures_kill_without_intent(failure):
     async def run():

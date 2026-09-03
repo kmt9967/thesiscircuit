@@ -1,6 +1,6 @@
 # Phase 2.6 Part 1 — bounded coordinator
 
-Status: implemented locally, disabled by default. New production database objects and
+Status: implemented, CI-verified and deployed disabled. New production database objects and
 synthetic session verification await explicit Supabase approval. No trading authority
 is granted by this implementation, deployment, or PR.
 

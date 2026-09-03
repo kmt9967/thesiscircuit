@@ -1,0 +1,149 @@
+{
+  "classification": "VERIFIED_READ_ONLY_PRODUCTION",
+  "source_commit": "85ef75f34eebeb22e800ff615a943c8fdbb16253",
+  "observed_at": "2026-09-03T02:33:02.580068Z",
+  "health": {
+    "status": "ok",
+    "mode": "paper",
+    "orders": "disabled"
+  },
+  "safety": {
+    "paper_base_url": "https://paper-api.alpaca.markets",
+    "data_base_url": "https://data.alpaca.markets",
+    "execution_enabled": false,
+    "configured_execution_enabled": false,
+    "allow_live_trading": false,
+    "alpaca_paper_trade": true,
+    "live_trading_allowed": false,
+    "order_submission_enabled": false,
+    "competition_starting_balance": 100000,
+    "one_shot": true,
+    "phase1_authorization_retired": true,
+    "phase2_mode": "DRY_RUN",
+    "phase2_execution_authorized": false,
+    "autonomous_trading_enabled": false,
+    "phase2_dispatch_available": false,
+    "phase25_dispatch_implemented": true,
+    "phase26_bounded_coordinator_implemented": true,
+    "phase26_active_paper_session": false,
+    "manage_existing_position": true,
+    "allow_position_exit": false
+  },
+  "integrations": {
+    "alpaca": {
+      "configured": true,
+      "connected": true,
+      "paper": true,
+      "account_status": "ACTIVE",
+      "starting_cash": 99815.97,
+      "open_orders": 0,
+      "orders_placed": 1
+    },
+    "supabase": {
+      "configured": true,
+      "connected": true,
+      "status_code": 200
+    }
+  },
+  "portfolio": {
+    "classification": "ACTUAL ALPACA PAPER RESULTS",
+    "observed_at": "2026-09-03T02:33:02.580068Z",
+    "market_open": false,
+    "account": {
+      "equity": 99979.97,
+      "cash": 99815.97,
+      "buying_power": 99815.97,
+      "competition_pnl": -20.03,
+      "expected_account_match": true
+    },
+    "total_orders": 1,
+    "execution_enabled": false,
+    "autonomous_trading_enabled": false,
+    "positions": [
+      {
+        "timestamp": "2026-09-03T02:33:02.580068Z",
+        "position": {
+          "symbol": "SPY260904C00768000",
+          "qty": 1,
+          "side": "long",
+          "entry": 1.84,
+          "current_price": 1.64,
+          "market_value": 164,
+          "cost_basis": 184,
+          "unrealized_pl": -20,
+          "unrealized_plpc": -0.1087,
+          "asset_class": "us_option"
+        },
+        "quote": {
+          "symbol": "SPY260904C00768000",
+          "underlying": "SPY",
+          "expiry": "2026-09-04",
+          "strike": 768,
+          "kind": "call",
+          "tradable": true,
+          "multiplier": 100,
+          "quote_at": "2026-09-02T19:59:59.241487Z",
+          "source": "alpaca:indicative",
+          "bid": 1.66,
+          "ask": 1.68,
+          "bid_size": 21,
+          "ask_size": 32,
+          "open_interest": 2773,
+          "open_interest_date": "2026-08-31",
+          "volume": null,
+          "implied_volatility": 0.1242,
+          "delta": 0.3532,
+          "gamma": 0.0528,
+          "theta": -0.6803,
+          "vega": 0.2105
+        },
+        "expiry": "2026-09-04",
+        "hours_to_expiry": 41.44928331444444,
+        "theta_daily_dollars": -68.03,
+        "regime_compatible": null,
+        "thesis_invalidated": null,
+        "risk_limit_ok": true,
+        "recommendation": "RISK_ALERT",
+        "reasons": [
+          "Missing fresh quote, expiry proximity or risk limit requires operator review"
+        ],
+        "action_authorized": false,
+        "quote_fresh": false,
+        "market_open": false,
+        "quote_age_seconds": 23583.338581,
+        "mark_basis": "Broker-reported position value; underlying quote timestamp not supplied by broker"
+      }
+    ],
+    "risk_limits": {
+      "per_trade_fraction": 0.005,
+      "per_trade_dollars": 500,
+      "aggregate_fraction": 0.02,
+      "daily_drawdown_fraction": 0.01,
+      "max_positions": 3,
+      "max_spread_fraction": 0.1,
+      "max_spread_dollars": 0.15,
+      "minimum_quote_size": 5,
+      "minimum_open_interest": 100,
+      "min_expiry_hours": 24,
+      "max_expiry_days": 7,
+      "freshness_seconds": 120,
+      "cooldown_seconds": 900,
+      "emergency_kill": false
+    },
+    "data_errors": []
+  },
+  "session_verification": {
+    "status": "not_configured",
+    "classification": "SYNTHETIC",
+    "broker_calls": 0
+  },
+  "new_orders_this_task": 0,
+  "production_session_migration": "NOT_APPLIED_PENDING_APPROVAL",
+  "vercel": {
+    "status": "READY",
+    "http_status": 200,
+    "url": "https://thesiscircuit.vercel.app",
+    "deployment_id": "dpl_JCxyaCjC5tb9VxNvc4rugweyB9xm",
+    "runtime_error_entries_returned": 0
+  }
+}
