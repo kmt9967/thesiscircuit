@@ -76,7 +76,8 @@ def review_positions(state: MarketState, regime: Regime, policy: Policy,
         hours = (expiry_at(option) - now).total_seconds() / 3600 if option else None
         quote_age = (now - option.quote_at).total_seconds() if option else None
         fresh = quote_age is not None and 0 <= quote_age <= policy.freshness_seconds
-        compatible = None if not option or not fresh or regime.name == "UNCERTAIN" else not (
+        compatible = None if (not option or not fresh or regime.name == "UNCERTAIN"
+                              or option.underlying != state.underlying) else not (
             option.kind == "call" and regime.name == "TREND_DOWN"
             or option.kind == "put" and regime.name == "TREND_UP")
         within_risk = abs(pos.cost_basis) <= min(500, state.account.equity * policy.per_trade_fraction)

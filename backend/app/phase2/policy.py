@@ -80,8 +80,9 @@ def validate(proposal: Proposal, state: MarketState, settings: Settings,
          0 <= (now - c.quote_at).total_seconds() <= policy.freshness_seconds and
          0 <= (now - state.features.timestamp).total_seconds() <= policy.freshness_seconds,
          "Fresh underlying and option quote; future timestamps rejected")
-    gate("valid_options", c is not None and c.tradable and c.underlying == "SPY"
-         and c.multiplier == 100, "Active standard SPY options only")
+    gate("valid_options", c is not None and c.tradable and c.underlying in {"SPY", "QQQ"}
+         and c.underlying == proposal.underlying == state.underlying
+         and c.multiplier == 100, "Active standard allowed options bound to matching underlying features")
     gate("proposal", proposal.status == "PROPOSED" and c is not None
          and proposal.quantity == 1 and abs(proposal.estimated_max_loss - c.ask * 100) < .001
          and 0 <= (now - proposal.timestamp).total_seconds() <= policy.freshness_seconds

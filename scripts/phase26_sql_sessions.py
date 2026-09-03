@@ -68,6 +68,21 @@ def advance(i,owner,target,error="null"):
 def main():
     if os.environ.get("CI")!="true" or os.environ.get("PGHOST")!="localhost":
         raise SystemExit("Disposable CI localhost database required")
+    session(allowed_underlyings=["QQQ"])
+    session(allowed_underlyings=["SPY", "QQQ"])
+    bad={"allowed_underlyings":["IWM"]}
+    # Build a complete document without invoking the helper, which expects success.
+    now=datetime.now(timezone.utc)
+    invalid={"id":str(uuid4()),"created_at":now.isoformat(),"starts_at":now.isoformat(),
+        "expires_at":(now+timedelta(minutes=15)).isoformat(),"paper_mode":True,"classification":"SYNTHETIC",
+        "approval_equity":"100000","max_opening_orders":1,"max_closing_orders":0,"max_total_orders":1,
+        "max_simultaneous_positions":3,"max_new_risk":"500","max_aggregate_premium_risk":"2000",
+        "allowed_strategy_types":["LONG_CALL"],"entry_permission":True,"exit_permission":False,
+        "manage_existing_position":True,"allow_position_exit":False,"existing_position_symbols":[],
+        "daily_drawdown_fraction":.01,"cadence_seconds":60,"max_cycles":1,"max_broker_failures":1,**bad}
+    denied=sql("set role service_role; select public.phase2_create_execution_session("+value(invalid)+");")
+    assert denied.returncode!=0
+    print("PASS: immutable session scope accepts SPY/QQQ subsets and rejects unsupported underlyings")
     s=session(); cycle=str(uuid4()); start(s,cycle)
     candidates=[intent(cycle) for _ in range(8)]
     with ThreadPoolExecutor(max_workers=8) as pool:

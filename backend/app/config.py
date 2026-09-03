@@ -1,5 +1,7 @@
+from datetime import datetime
 from functools import lru_cache
 from typing import Literal
+from uuid import UUID
 
 from pydantic import AnyHttpUrl, Field, SecretStr, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -43,6 +45,14 @@ class Settings(BaseSettings):
     phase26_synthetic_batch: str = ""
     autonomous_trading_enabled: bool = False
     phase2_execution_token: SecretStr | None = None
+    phase2_active_session_id: UUID | None = None
+    phase2_session_starts_at: datetime | None = None
+    phase2_session_expires_at: datetime | None = None
+    phase2_max_order_budget: int = Field(default=0, ge=0, le=1)
+    railway_project_access_token: SecretStr | None = None
+    railway_project_id: str = ""
+    railway_environment_id: str = ""
+    railway_service_id: str = ""
     phase2_cycle_seconds: int = Field(default=60, ge=60, le=3600)
     phase2_emergency_kill: bool = False
     phase2_daily_drawdown_fraction: float = Field(default=0.01, gt=0, le=0.01)
@@ -57,8 +67,19 @@ class Settings(BaseSettings):
             raise ValueError("Live trading is permanently disabled")
         if self.allow_live_trading:
             raise ValueError("ALLOW_LIVE_TRADING must remain false")
+        if self.execution_enabled != self.autonomous_trading_enabled and self.phase2_execution_token:
+            raise ValueError("Phase 2 execution and autonomous gates must change together")
         if self.autonomous_trading_enabled and (not self.execution_enabled or not self.phase2_execution_token):
             raise ValueError("Autonomous mode requires separate Phase 2 server authorization and execution gate")
+        if self.autonomous_trading_enabled and not all((self.phase2_active_session_id,
+                self.phase2_session_starts_at,self.phase2_session_expires_at,
+                self.phase2_max_order_budget,self.railway_project_access_token,
+                self.railway_project_id,self.railway_environment_id,self.railway_service_id)):
+            raise ValueError("Bounded activation and verified Railway shutdown configuration required")
+        if self.phase2_session_starts_at and self.phase2_session_starts_at.tzinfo is None:
+            raise ValueError("Phase 2 session start must include timezone")
+        if self.phase2_session_expires_at and self.phase2_session_expires_at.tzinfo is None:
+            raise ValueError("Phase 2 session expiry must include timezone")
         if self.execution_enabled and not (self.phase1_execution_token or self.phase2_execution_token):
             raise ValueError("Phase 1 execution requires a server-only authorization token")
         if not self.alpaca_paper_trade:

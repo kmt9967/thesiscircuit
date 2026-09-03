@@ -167,7 +167,10 @@ class PaperOrderDispatcher:
             return await self.repository.advance(intent.id, cycle_owner, "UNKNOWN", error="LOOKUP_UNCERTAIN")
         if existing is not None:
             return await self.reconciliation.reconcile(record, cycle_owner)
-        state = await self.provider.refresh()
+        state = (await self.provider.refresh_for(intent.underlying)
+                 if hasattr(self.provider, "refresh_for") else await self.provider.refresh())
+        if state.underlying != intent.underlying:
+            raise RuntimeError("Fresh market state is bound to a different underlying")
         now = self.clock()
         await self.session_gate.validate(intent,state,now)
         if any(not 0 <= (now - stamp).total_seconds() <= 120

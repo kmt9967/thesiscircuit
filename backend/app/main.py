@@ -32,23 +32,38 @@ PHASE1_RETIRED = True
 phase2_batch_status: dict[str, Any] = {"status": "not_configured", "execution_enabled": False}
 phase25_status: dict[str, Any] = {"status": "not_configured", "classification": "SYNTHETIC", "broker_calls": 0}
 phase26_status: dict[str, Any] = {"status": "not_configured", "classification": "SYNTHETIC", "broker_calls": 0}
+phase2_activation_status: dict[str, Any] = {"status": "not_configured", "shutdown_verified": False}
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    from backend.app.phase2.data import ReadOnlyMarketProvider
+    from backend.app.phase2.data import MultiUnderlyingMarketProvider
     from backend.app.phase2.engine import assert_dry_run, run_batch
     from backend.app.phase2.policy import Policy
     from backend.app.phase2.repository import Phase2Repository
 
-    if PHASE1_RETIRED:
-        assert_dry_run(settings)  # Production refuses enabled execution; historical tests isolate v1.
+    activation = None
+    if not PHASE1_RETIRED:
+        pass  # Historical Phase 1 route tests provide their own isolated one-shot gate.
+    elif not (settings.execution_enabled or settings.autonomous_trading_enabled):
+        assert_dry_run(settings)
+    elif not (settings.execution_enabled and settings.autonomous_trading_enabled):
+        raise RuntimeError("Phase 2 activation flags must change together")
+    elif settings.phase2_dry_run_batch or settings.phase25_synthetic_batch or settings.phase26_synthetic_batch:
+        raise RuntimeError("Research/synthetic jobs cannot share an execution deployment")
+    else:
+        async def activate():
+            from backend.app.phase2.activation import run_production_activation
+            phase2_activation_status["status"] = "running"
+            result = await run_production_activation(settings)
+            phase2_activation_status.update(result)
+        activation = asyncio.create_task(activate())
     async def research():
         phase2_batch_status["status"] = "running"
         try:
             async with Phase2Repository(settings) as repository:
                 ids = await run_batch(
-                    ReadOnlyMarketProvider(settings), repository, settings,
+                    MultiUnderlyingMarketProvider(settings), repository, settings,
                     Policy(emergency_kill=settings.phase2_emergency_kill,
                            daily_drawdown_fraction=settings.phase2_daily_drawdown_fraction),
                     settings.phase2_dry_run_batch,
@@ -84,6 +99,10 @@ async def lifespan(app: FastAPI):
             phase26_status.update(status="blocked", error_type=type(exc).__name__)
     bounded = asyncio.create_task(session_verification()) if settings.phase26_synthetic_batch else None
     yield
+    if activation:
+        activation.cancel()
+        with suppress(asyncio.CancelledError):
+            await activation
     if bounded:
         bounded.cancel()
         with suppress(asyncio.CancelledError):
@@ -148,13 +167,14 @@ async def safety() -> dict[str, object]:
         "competition_starting_balance": settings.alpaca_competition_starting_balance,
         "one_shot": True,
         "phase1_authorization_retired": PHASE1_RETIRED,
-        "phase2_mode": "DRY_RUN",
-        "phase2_execution_authorized": False,
+        "phase2_mode": "PAPER_BOUNDED" if settings.autonomous_trading_enabled else "DRY_RUN",
+        "phase2_execution_authorized": settings.execution_enabled and settings.autonomous_trading_enabled,
         "autonomous_trading_enabled": settings.autonomous_trading_enabled,
-        "phase2_dispatch_available": False,
+        "phase2_dispatch_available": True,
         "phase25_dispatch_implemented": True,
         "phase26_bounded_coordinator_implemented": True,
-        "phase26_paper_session_activation_available": False,
+        "phase26_paper_session_activation_available": bool(settings.railway_project_access_token),
+        "phase2_activation": phase2_activation_status,
         "manage_existing_position": True,
         "allow_position_exit": False,
     }

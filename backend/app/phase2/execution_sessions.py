@@ -6,7 +6,7 @@ from uuid import UUID
 
 from pydantic import AwareDatetime, Field, model_validator
 
-from backend.app.phase2.models import MarketState, Record
+from backend.app.phase2.models import MarketState, Record, Underlying
 from backend.app.phase2.order_intents import OrderIntent
 from backend.app.services.supabase import SupabaseAuditRepository
 
@@ -25,7 +25,7 @@ class ExecutionSession(Record):
     max_simultaneous_positions: int = Field(default=3, ge=1, le=3)
     max_new_risk: Decimal = Field(default=Decimal(500), ge=0, le=500)
     max_aggregate_premium_risk: Decimal = Field(default=Decimal(2000), gt=0)
-    allowed_underlyings: list[Literal["SPY"]] = Field(default_factory=lambda:["SPY"],min_length=1,max_length=1)
+    allowed_underlyings: list[Underlying] = Field(default_factory=lambda:["SPY"],min_length=1,max_length=2)
     allowed_strategy_types: list[Literal["LONG_CALL", "LONG_PUT"]] = Field(
         default_factory=lambda:["LONG_CALL","LONG_PUT"],min_length=1,max_length=2)
     entry_permission: bool = False
@@ -40,6 +40,8 @@ class ExecutionSession(Record):
 
     @model_validator(mode="after")
     def bounded(self):
+        if len(set(self.allowed_underlyings)) != len(self.allowed_underlyings):
+            raise ValueError("Duplicate underlying scope")
         if not self.created_at <= self.starts_at < self.expires_at:
             raise ValueError("Ordered finite session timestamps required")
         if not 1 <= (self.expires_at-self.created_at).total_seconds() <= 3600:

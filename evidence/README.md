@@ -32,3 +32,8 @@ and production synthetic cases are verified; no autonomous execution is enabled.
 - `../docs/PHASE-2.6-PREAUTHORIZATION.md`: PLANNED finite authorization proposal,
   preflight design and activation/compliance blockers. Not an active PAPER session
   or broker-execution proof.
+
+## Phase 2.7
+
+See [final readiness evidence](phase-2.7/README.md). It separates locally verified SDK,
+activation/shutdown and multi-underlying controls from the still-required production dry run.

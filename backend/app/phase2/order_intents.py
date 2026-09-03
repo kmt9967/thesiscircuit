@@ -6,7 +6,7 @@ from uuid import NAMESPACE_URL, UUID, uuid5
 
 from pydantic import AwareDatetime, Field, model_validator
 
-from backend.app.phase2.models import Cycle, ExitProposal, Proposal, Record, RiskResult
+from backend.app.phase2.models import Cycle, ExitProposal, Proposal, Record, RiskResult, Underlying
 from backend.app.services.supabase import SupabaseAuditRepository
 
 TERMINAL = {"FILLED", "CANCELED", "REJECTED", "EXPIRED"}
@@ -19,7 +19,7 @@ class OrderIntent(Record):
     proposal_id: UUID
     risk_decision_id: UUID
     action: Literal["OPEN", "CLOSE"]
-    underlying: Literal["SPY"] = "SPY"
+    underlying: Underlying = "SPY"
     contracts: list[str] = Field(min_length=1, max_length=1)
     side: Literal["buy", "sell"]
     quantity: int = Field(ge=1, le=3)
@@ -45,6 +45,10 @@ class OrderIntent(Record):
         if self.risk.decision != "APPROVED" or not self.risk.checks or not all(g.passed for g in self.risk.checks):
             raise ValueError("Independent risk approval required")
         p = self.proposal
+        if p.contract is None or p.contract.underlying != self.underlying:
+            raise ValueError("Intent/contract underlying mismatch")
+        if isinstance(p, Proposal) and p.underlying != self.underlying:
+            raise ValueError("Intent/proposal underlying mismatch")
         if p.contract is None or self.contracts != [p.contract.symbol] or p.quantity != self.quantity:
             raise ValueError("Contract or quantity mismatch")
         if self.action == "OPEN":
@@ -151,7 +155,8 @@ def make_intent(cycle_id: UUID, proposal: Proposal | ExitProposal, risk: RiskRes
     identity = uuid5(NAMESPACE_URL, f"thesiscircuit:order:{classification}:{proposal.id}:{action}")
     risk_id = uuid5(identity, risk.model_dump_json())
     return OrderIntent(id=identity, cycle_id=cycle_id, proposal_id=proposal.id, risk_decision_id=risk_id,
-        action=action, side="sell" if action == "CLOSE" else "buy", contracts=[proposal.contract.symbol],
+        action=action, underlying=proposal.contract.underlying,
+        side="sell" if action == "CLOSE" else "buy", contracts=[proposal.contract.symbol],
         quantity=proposal.quantity, limit_price=Decimal(str(proposal.limit_price if action == "CLOSE"
                                                           else proposal.contract.ask)),
         expected_max_loss=0 if action == "CLOSE" else Decimal(str(proposal.estimated_max_loss)),

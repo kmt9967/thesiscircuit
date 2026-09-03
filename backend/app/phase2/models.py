@@ -12,6 +12,7 @@ RegimeName = Literal[
     "TREND_UP", "TREND_DOWN", "RANGE", "HIGH_VOLATILITY", "LOW_VOLATILITY", "UNCERTAIN"
 ]
 AgentName = Literal["TREND", "RANGE", "DEFENSIVE"]
+Underlying = Literal["SPY", "QQQ"]
 
 
 class Record(BaseModel):
@@ -59,7 +60,7 @@ class Features(Record):
 
 class Option(Record):
     symbol: str = Field(pattern=r"^[A-Z]{1,6}\d{6}[CP]\d{8}$")
-    underlying: Literal["SPY"] = "SPY"
+    underlying: Underlying = "SPY"
     expiry: date
     strike: float = Field(gt=0)
     kind: Literal["call", "put"]
@@ -121,6 +122,7 @@ class OrderRead(Record):
 
 
 class MarketState(Record):
+    underlying: Underlying = "SPY"
     timestamp: AwareDatetime
     account: AccountSnapshot
     clock: MarketClock
@@ -145,7 +147,7 @@ class Proposal(Record):
     agent: AgentName
     timestamp: AwareDatetime
     regime: RegimeName
-    underlying: Literal["SPY"] = "SPY"
+    underlying: Underlying = "SPY"
     contract: Option | None
     direction: Literal["BULLISH", "BEARISH", "NONE"]
     strategy_type: Literal["LONG_CALL", "LONG_PUT", "NO_TRADE"]
@@ -326,4 +328,5 @@ class Cycle(Record):
     scores: list[AgentScore]
     position_reviews: list[PositionReview]
     reflections: list[Reflection]
+    underlying_evaluations: list[dict[str, Any]] = Field(default_factory=list)
     timeline: list[dict[str, Any]]

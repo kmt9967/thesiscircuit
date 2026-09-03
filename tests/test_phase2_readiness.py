@@ -17,7 +17,14 @@ from tests.test_phase2 import NOW, option, position, proposal, state
 
 def authorized():
     return Settings(execution_enabled=True, autonomous_trading_enabled=True,
-                    phase2_execution_token=SecretStr("test-only-authorization-" * 3))
+                    phase2_execution_token=SecretStr("test-only-authorization-" * 3),
+                    phase2_active_session_id="00000000-0000-4000-8000-000000000001",
+                    phase2_session_starts_at=NOW,
+                    phase2_session_expires_at=NOW+timedelta(minutes=15),
+                    phase2_max_order_budget=1,
+                    railway_project_access_token=SecretStr("test-project-token"),
+                    railway_project_id="test-project", railway_environment_id="test-environment",
+                    railway_service_id="test-service")
 
 
 @pytest.mark.parametrize("failure", ["wrong_token", "execution_disabled", "autonomous_disabled",

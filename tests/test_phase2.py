@@ -13,7 +13,12 @@ from backend.app.config import Settings
 from backend.app.models import AccountSnapshot, MarketClock
 from backend.app.phase2.agents import allocate, critique, propose
 from backend.app.phase2.data import parse_option
-from backend.app.phase2.engine import assert_dry_run, run_batch, run_cycle
+from backend.app.phase2.engine import (
+    assert_dry_run,
+    run_batch,
+    run_cycle,
+    run_multi_underlying_cycle,
+)
 from backend.app.phase2.features import classify, features
 from backend.app.phase2.models import (
     Bar,
@@ -99,6 +104,24 @@ def test_invalid_option_and_proposal_schemas():
     for changes in ({"estimated_max_loss": 1}, {"quantity": 2}, {"strategy_type": "LONG_PUT"}):
         with pytest.raises(ValidationError): Proposal.model_validate({**p.model_dump(), **changes})
     with pytest.raises(ValidationError): CriticReview.model_validate({"proposal_id": uuid4()})
+
+
+def test_multi_underlying_selection_preserves_spy_concentration_veto():
+    spy = state(positions=[position()])
+    qqq_option = option(symbol="QQQ260904C00690000", underlying="QQQ", strike=690)
+    qqq_features = spy.features.model_copy(update={"price": 690, "support": 688, "resistance": 692})
+    qqq = state(underlying="QQQ", positions=[position()], features=qqq_features, options=[qqq_option])
+    cycle = run_multi_underlying_cycle([spy, qqq], Settings(), Policy(), "multi-unit", 0, [], [], NOW)
+    assert cycle.state.underlying == "QQQ"
+    assert cycle.decision == "DRY_RUN_CANDIDATE"
+    assert {item["underlying"] for item in cycle.underlying_evaluations} == {"SPY", "QQQ"}
+    spy_eval = next(item for item in cycle.underlying_evaluations if item["underlying"] == "SPY")
+    assert spy_eval["decision"] == "NO_TRADE"
+
+
+def test_multi_underlying_rejects_duplicate_or_cross_bound_state():
+    with pytest.raises(ValueError, match="Unique underlying"):
+        run_multi_underlying_cycle([state(), state()], Settings(), Policy(), "multi-unit", 0, [], [], NOW)
 
 
 def test_alpaca_snapshot_parsing_does_not_invent_volume():

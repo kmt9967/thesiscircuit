@@ -57,6 +57,41 @@ def run_cycle(state: MarketState, settings: Settings, policy: Policy, batch: str
     )
 
 
+def run_multi_underlying_cycle(states: list[MarketState], settings: Settings, policy: Policy,
+                               batch: str, sequence: int, shadows: list[Shadow],
+                               historical_marks: list[ShadowMark], now: datetime) -> Cycle:
+    """Evaluate isolated states and select one eligible thesis, or preserve NO_TRADE.
+
+    Features, quotes, contracts, critics and risk checks are never mixed across
+    underlyings. The cross-underlying comparison uses the allocator's deterministic
+    composite score; it cannot manufacture a proposal when all states say NO_TRADE.
+    """
+    if not states or len({state.underlying for state in states}) != len(states):
+        raise ValueError("Unique underlying market states required")
+    candidates = [run_cycle(state, settings, policy, f"{batch}:{state.underlying}", sequence,
+                            shadows, historical_marks, now) for state in states]
+
+    def score(cycle: Cycle) -> float:
+        selected = str(cycle.allocation.proposal_id) if cycle.allocation.proposal_id else ""
+        return cycle.allocation.scores.get(selected, -1.0) if cycle.decision == "DRY_RUN_CANDIDATE" else -1.0
+
+    chosen = max(candidates, key=lambda cycle: (score(cycle), cycle.state.underlying))
+    if all(cycle.decision == "NO_TRADE" for cycle in candidates):
+        chosen = candidates[0]
+    evaluations = [{"underlying": cycle.state.underlying, "decision": cycle.decision,
+                    "regime": cycle.regime.name, "score": score(cycle),
+                    "data_errors": list(cycle.state.data_errors)} for cycle in candidates]
+    return chosen.model_copy(update={
+        "id": uuid5(NAMESPACE_URL, f"thesiscircuit:phase2:{batch}:{sequence}"),
+        "batch": batch,
+        "sequence": sequence,
+        "underlying_evaluations": evaluations,
+        "timeline": [{"sequence": 0, "stage": "underlying_selection", "timestamp": now.isoformat(),
+                      "note": "Independent SPY/QQQ evaluation; no forced trade"}] + [
+                          {**item, "sequence": item["sequence"] + 1} for item in chosen.timeline],
+    })
+
+
 async def run_batch(provider, repository, settings: Settings, policy: Policy, batch: str,
                     count: int = 3, interval: float = 60, sleep=asyncio.sleep) -> list[str]:
     assert_dry_run(settings)
@@ -87,9 +122,14 @@ async def _run_batch(provider, repository, settings: Settings, policy: Policy, b
         async def work(sequence=sequence):
             assert_dry_run(settings)
             shadows, old_marks = await repository.history()
-            state = await provider.refresh(list({s.symbol for s in shadows}))
-            return run_cycle(state, settings, policy, batch, sequence, shadows, old_marks,
-                             datetime.now(timezone.utc))
+            shadow_symbols = list({s.symbol for s in shadows})
+            now = datetime.now(timezone.utc)
+            if hasattr(provider, "refresh_all"):
+                states = await provider.refresh_all(provider.underlyings, shadow_symbols)
+                return run_multi_underlying_cycle(states, settings, policy, batch, sequence,
+                                                  shadows, old_marks, now)
+            state = await provider.refresh(shadow_symbols)
+            return run_cycle(state, settings, policy, batch, sequence, shadows, old_marks, now)
         try:
             cycle = await asyncio.wait_for(work(), timeout=150)
             assert_dry_run(settings)

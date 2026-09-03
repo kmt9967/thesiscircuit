@@ -27,7 +27,7 @@ def propose(agent: AgentName, state: MarketState, regime: Regime, policy: Policy
         "price": f.price, "rsi": f.rsi, "trend_strength": f.trend_strength,
         "return_20m": f.return_20m, "realized_volatility": f.realized_volatility,
     }
-    candidates = [o for o in state.options if o.kind == direction and o.tradable
+    candidates = [o for o in state.options if o.underlying == state.underlying and o.kind == direction and o.tradable
                   and 0 <= (now - o.quote_at).total_seconds() <= policy.freshness_seconds
                   and policy.min_expiry_hours <= (expiry_at(o) - now).total_seconds() / 3600
                   <= policy.max_expiry_days * 24
@@ -36,6 +36,7 @@ def propose(agent: AgentName, state: MarketState, regime: Regime, policy: Policy
                   and liquid(o, now, policy)]
     candidate = min(candidates, key=lambda o: (abs(o.strike - f.price), o.spread_pct, o.symbol)) if candidates and f else None
     common = {"agent": agent, "timestamp": now, "regime": regime.name, "evidence": evidence,
+              "underlying": state.underlying,
               "invalidation": regime.invalidation}
     if not candidate or not f:
         return Proposal(**common, contract=None, direction="NONE", strategy_type="NO_TRADE",
@@ -70,7 +71,7 @@ def critique(p: Proposal, state: MarketState, regime: Regime) -> CriticReview:
         liquidity_risk=f"Spread {c.spread_pct:.1%}; feed {c.source}" if c else "No eligible quote",
         timing_risk="Late entry and trend reversal can invalidate the short-horizon signal",
         expiration_theta_risk="Time decay and automatic exercise near expiry require separate operator handling",
-        concentration_risk="Existing SPY position: additional directional thesis prohibited" if concentration else "No matching underlying exposure observed",
+        concentration_risk=f"Existing {p.underlying} position: additional directional thesis prohibited" if concentration else "No matching underlying exposure observed",
         no_trade_argument="Preserving cash avoids premium decay and avoids concentrating existing risk",
         severity=0.95 if concentration else (0.6 if regime.name == "HIGH_VOLATILITY" else 0.25),
     )

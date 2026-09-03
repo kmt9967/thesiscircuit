@@ -10,7 +10,7 @@ from uuid import NAMESPACE_URL, uuid4, uuid5
 
 from backend.app.config import DATA_BASE_URL, PAPER_BASE_URL
 from backend.app.phase2.authorization import authorization_gates
-from backend.app.phase2.engine import assert_dry_run, run_cycle
+from backend.app.phase2.engine import assert_dry_run, run_cycle, run_multi_underlying_cycle
 from backend.app.phase2.execution_sessions import SessionDenied, SessionOrderGate, SessionState
 from backend.app.phase2.order_intents import make_intent
 from backend.app.phase2.policy import Policy
@@ -132,12 +132,18 @@ class BoundedExecutionCoordinator:
                     raise RuntimeError("Cycle lock unavailable")
                 await self.sessions.control(session_id,"CYCLE_START",cycle_key=cycle_id)
                 async def work(session=session, batch=batch, sequence=sequence, owner=owner):
-                    state=await self.provider.refresh()
-                    reason=kill_condition(state,self.settings,session,self.clock())
-                    if reason:
-                        await self.sessions.control(session_id,"KILL",reason)
-                        return None,None
-                    cycle=run_cycle(state,research_settings,policy,batch,sequence,[],[],self.clock())
+                    if hasattr(self.provider, "refresh_all"):
+                        states=await self.provider.refresh_all(session.document.allowed_underlyings)
+                    else:
+                        states=[await self.provider.refresh()]
+                    for state in states:
+                        reason=kill_condition(state,self.settings,session,self.clock())
+                        if reason:
+                            await self.sessions.control(session_id,"KILL",reason)
+                            return None,None
+                    cycle=(run_multi_underlying_cycle(states,research_settings,policy,batch,sequence,[],[],self.clock())
+                           if len(states)>1 else
+                           run_cycle(states[0],research_settings,policy,batch,sequence,[],[],self.clock()))
                     if session.document.manage_existing_position:
                         report["existing_position_actions"] += [{"symbol":r.position.symbol,
                             "recommendation":r.recommendation,"exit_allowed":False}

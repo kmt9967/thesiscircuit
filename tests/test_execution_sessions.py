@@ -101,7 +101,7 @@ class Sessions:
     {"expires_at":NOW},{"starts_at":NOW-timedelta(seconds=1)},
     {"paper_mode":False},{"approval_equity":90000},{"max_new_risk":501},
     {"daily_drawdown_fraction":.02},{"max_cycles":4},{"cadence_seconds":59},
-    {"max_simultaneous_positions":4},{"allowed_underlyings":["QQQ"]},
+    {"max_simultaneous_positions":4},{"allowed_underlyings":["UNKNOWN"]},
 ])
 def test_session_bounds_fail_closed(changes):
     with pytest.raises(ValidationError): definition(**changes)

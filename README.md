@@ -4,8 +4,9 @@ ThesisCircuit is a paper-only options research project for the Alpaca AI Trading
 Hackathon. Phase 1 proves a single controlled deterministic execution with an auditable
 risk decision. Phase 2 Part 1 implements a deterministic three-agent research
 committee with critic, risk vetoes, counterfactual tracking and position recommendations.
-It is **DRY RUN ONLY**: no new opening or closing orders, no execution credential,
-and the Phase 1 token's authorization mechanism is retired.
+Production rests with both execution flags disabled. A bounded, server-startup-only
+activation path now exists for a separately approved immutable session; there is no
+frontend activation control, and the Phase 1 authorization mechanism is retired.
 
 ## Phase 2 research
 
@@ -17,7 +18,9 @@ order dispatcher, immutable intent claims and restart reconciliation. Its produc
 verification is complete; no current research loop or frontend can activate broker execution.
 [Phase 2.6 Part 1](docs/PHASE-2.6-COORDINATOR.md) adds a finite execution-session
 coordinator and atomic session budgets. Its additive Supabase migration and seven
-production synthetic scenarios are verified; broker execution remains unavailable.
+production synthetic scenarios are verified. The final readiness layer uses the official
+`alpaca-py` SDK, supports independently evaluated SPY and QQQ states, and forces both
+Railway execution flags off at every terminal session outcome.
 The Strategy Arena, Decision Council and Shadow Desk show recorded real-data
 research, not fabricated performance. Finite operator-configured batches run three
 cycles and stop. The existing SPY paper position remains untouched.

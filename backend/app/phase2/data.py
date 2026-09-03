@@ -1,4 +1,4 @@
-"""Read-only async Alpaca adapter. It intentionally has no trading SDK/client."""
+"""Read-only feature provider. Each refresh binds quotes/features to ONE underlying."""
 import asyncio
 from datetime import datetime, time, timedelta, timezone
 from zoneinfo import ZoneInfo
@@ -27,8 +27,11 @@ def parse_option(contract: dict, snapshot: dict) -> Option:
 
 
 class ReadOnlyMarketProvider:
-    def __init__(self, settings: Settings):
+    def __init__(self, settings: Settings, underlying: str = "SPY"):
+        if underlying not in {"SPY", "QQQ"}:
+            raise ValueError("Unsupported research underlying")
         self.settings = settings
+        self.underlying = underlying
 
     async def refresh(self, shadow_symbols: list[str] | None = None,
                       observations_only: bool = False) -> MarketState:
@@ -45,7 +48,7 @@ class ReadOnlyMarketProvider:
                               asset_class=p["asset_class"]) for p in raw_positions]
         orders = [OrderRead(symbol=o["symbol"], client_order_id=o["client_order_id"],
                             status=o["status"], submitted_at=o["submitted_at"]) for o in raw_orders]
-        state = MarketState(timestamp=now, account=a, clock=clock, positions=positions, orders=orders)
+        state = MarketState(underlying=self.underlying,timestamp=now, account=a, clock=clock, positions=positions, orders=orders)
         async with MarketDataService(self.settings) as data:
             # Independent observations survive a closed market or failed feature refresh.
             # They are NOT inserted into the fresh entry-candidate universe.
@@ -65,10 +68,13 @@ class ReadOnlyMarketProvider:
             if observations_only:
                 return state
             try:
-                quote = await data.stock_quote("SPY")
+                asset = await data.asset(self.underlying)
+                if not asset.tradable or not asset.options_enabled or asset.status != "active":
+                    raise ValueError("Underlying must be active, tradable and options-enabled")
+                quote = await data.stock_quote(self.underlying)
                 local_date = now.astimezone(ZoneInfo("America/New_York")).date()
                 session_start = datetime.combine(local_date, time(9, 30), ZoneInfo("America/New_York"))
-                raw = await data._get(data.data_base, "/v2/stocks/SPY/bars", {
+                raw = await data._get(data.data_base, f"/v2/stocks/{self.underlying}/bars", {
                     "timeframe": "1Min", "start": session_start.isoformat(),
                     "end": now.isoformat(), "limit": 1000, "feed": "iex", "sort": "asc",
                 })
@@ -76,7 +82,7 @@ class ReadOnlyMarketProvider:
                     raise ValueError("Minute bar response truncated")
                 bars = [Bar(**{k: b[k] for k in ("t", "o", "h", "l", "c", "v", "vw") if k in b})
                         for b in raw["bars"]]
-                previous = await data._get(data.data_base, "/v2/stocks/SPY/bars", {
+                previous = await data._get(data.data_base, f"/v2/stocks/{self.underlying}/bars", {
                     "timeframe": "1Day", "start": (now - timedelta(days=7)).date().isoformat(),
                     "end": session_start.isoformat(), "limit": 1, "sort": "desc", "feed": "iex",
                 })
@@ -84,7 +90,7 @@ class ReadOnlyMarketProvider:
                 state.features = features(bars, quote.midpoint, quote.timestamp,
                                           datetime.now(timezone.utc), previous_close)
                 contracts = await data._get(data.paper_base, "/v2/options/contracts", {
-                    "underlying_symbols": "SPY", "status": "active",
+                    "underlying_symbols": self.underlying, "status": "active",
                     "expiration_date_gte": (local_date + timedelta(days=1)).isoformat(),
                     "expiration_date_lte": (local_date + timedelta(days=7)).isoformat(),
                     "strike_price_gte": str(round(quote.midpoint * 0.985, 2)),
@@ -98,6 +104,8 @@ class ReadOnlyMarketProvider:
                     c["expiration_date"], abs(float(c["strike_price"]) - quote.midpoint), c["symbol"]))[:80]
                 selected = {c["symbol"]: c for c in ranked}
                 for symbol in {p.symbol for p in positions} | set(shadow_symbols or []):
+                    if not symbol.startswith(self.underlying) or symbol[len(self.underlying):len(self.underlying)+1].isalpha():
+                        continue  # Other-underlying observations never become entry candidates.
                     if symbol not in selected:
                         selected[symbol] = universe.get(symbol) or await data._get(
                             data.paper_base, f"/v2/options/contracts/{symbol}")
@@ -128,3 +136,36 @@ class ReadOnlyMarketProvider:
                 state.options = []
                 state.data_errors.append("Market data incomplete or stale; no proposal authorized")
         return state
+
+    async def refresh_for(self, underlying: str, shadow_symbols: list[str] | None = None,
+                          observations_only: bool = False) -> MarketState:
+        """Refresh one explicitly named underlying; never reuse another symbol's features."""
+        if underlying != self.underlying:
+            raise ValueError("Provider is bound to a different underlying")
+        return await self.refresh(shadow_symbols, observations_only)
+
+
+class MultiUnderlyingMarketProvider:
+    """Small explicit universe; every state retains its own quote/feature provenance."""
+
+    def __init__(self, settings: Settings, underlyings: tuple[str, ...] = ("SPY", "QQQ")):
+        if not underlyings or len(set(underlyings)) != len(underlyings):
+            raise ValueError("A unique underlying universe is required")
+        self.underlyings = list(underlyings)
+        self.providers = {symbol: ReadOnlyMarketProvider(settings, symbol) for symbol in underlyings}
+
+    async def refresh_for(self, underlying: str, shadow_symbols: list[str] | None = None,
+                          observations_only: bool = False) -> MarketState:
+        try:
+            provider = self.providers[underlying]
+        except KeyError:
+            raise ValueError("Underlying is outside the configured universe") from None
+        return await provider.refresh(shadow_symbols, observations_only)
+
+    async def refresh_all(self, underlyings: list[str], shadow_symbols: list[str] | None = None) -> list[MarketState]:
+        if not underlyings or any(symbol not in self.providers for symbol in underlyings):
+            raise ValueError("Session underlying scope is not configured")
+        states = await asyncio.gather(*(self.refresh_for(symbol, shadow_symbols) for symbol in underlyings))
+        if [state.underlying for state in states] != underlyings:
+            raise RuntimeError("Cross-underlying market-state contamination")
+        return states
