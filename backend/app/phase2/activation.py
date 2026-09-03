@@ -6,6 +6,7 @@ immutable Supabase session document must agree before the coordinator can start.
 import asyncio
 from contextlib import AsyncExitStack, suppress
 from datetime import datetime, timezone
+from uuid import NAMESPACE_URL, uuid5
 
 import httpx
 
@@ -16,6 +17,7 @@ from backend.app.phase2.order_dispatch import PaperOrderDispatcher
 from backend.app.phase2.order_intents import OrderIntentService
 from backend.app.phase2.repository import Phase2Repository
 from backend.app.services.alpaca import AlpacaClient
+from backend.app.services.supabase import SupabaseAuditRepository
 
 RAILWAY_GRAPHQL = "https://backboard.railway.com/graphql/v2"
 
@@ -67,7 +69,7 @@ class RailwayShutdownController:
         return (variables.get("EXECUTION_ENABLED") == "true",
                 variables.get("AUTONOMOUS_TRADING_ENABLED") == "true")
 
-    async def force_disabled(self) -> None:
+    async def force_disabled(self, *, skip_deploys: bool = False) -> None:
         # Local authority disappears before the control-plane request is attempted.
         self.settings.execution_enabled = False
         self.settings.autonomous_trading_enabled = False
@@ -81,12 +83,59 @@ class RailwayShutdownController:
             "serviceId": self.settings.railway_service_id,
             "variables": {"EXECUTION_ENABLED": "false", "AUTONOMOUS_TRADING_ENABLED": "false"},
             "replace": False,
-            "skipDeploys": False,
+            "skipDeploys": skip_deploys,
         }})
         if data.get("variableCollectionUpsert") is not True:
             raise RuntimeError("Railway shutdown was not acknowledged")
         if await self.configured_flags() != (False, False):
             raise RuntimeError("Railway shutdown read-back failed")
+
+
+async def verify_production_shutdown_control(settings, batch: str, *, controller=None,
+                                             repository=None) -> dict:
+    """Idempotent SYNTHETIC proof of the false-only production shutdown path."""
+    if not batch or settings.execution_enabled or settings.autonomous_trading_enabled:
+        raise RuntimeError("Synthetic shutdown verification requires both gates disabled")
+    trace_id = str(uuid5(NAMESPACE_URL, f"thesiscircuit:phase2.7:{batch}"))
+    owns_controller = controller is None
+    owns_repository = repository is None
+    control = controller or RailwayShutdownController(settings)
+    audit = repository or SupabaseAuditRepository(settings)
+    try:
+        existing = await audit.event(trace_id, 2_700_000)
+        if existing:
+            return existing["payload"]
+        await control.verify_scope()
+        before = await control.configured_flags()
+        if before != (False, False):
+            raise RuntimeError("Synthetic verification found an enabled production gate")
+        await control.force_disabled(skip_deploys=True)
+        after = await control.configured_flags()
+        if after != (False, False):
+            raise RuntimeError("Synthetic shutdown verification read-back failed")
+        payload = {
+            "status": "completed",
+            "classification": "SYNTHETIC",
+            "batch": batch,
+            "scope_verified": True,
+            "false_only_write_verified": True,
+            "execution_enabled": False,
+            "autonomous_trading_enabled": False,
+            "broker_submission_calls": 0,
+        }
+        await audit.insert("system_events", {
+            "trace_id": trace_id,
+            "sequence": 2_700_000,
+            "kind": "phase2_synthetic_shutdown_verified",
+            "payload": payload,
+            "paper": True,
+        }, on_conflict="trace_id,sequence")
+        return payload
+    finally:
+        if owns_controller:
+            await control.__aexit__()
+        if owns_repository:
+            await audit.__aexit__()
 
 
 class ActivationSupervisor:

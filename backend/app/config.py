@@ -43,6 +43,7 @@ class Settings(BaseSettings):
     phase2_dry_run_batch: str = ""
     phase25_synthetic_batch: str = ""
     phase26_synthetic_batch: str = ""
+    phase27_synthetic_shutdown_batch: str = ""
     autonomous_trading_enabled: bool = False
     phase2_execution_token: SecretStr | None = None
     phase2_active_session_id: UUID | None = None

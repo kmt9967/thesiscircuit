@@ -27,6 +27,12 @@ competition closure, UNKNOWN broker state, dispatcher failure and process cancel
 enter this `finally` path. Supabase records both the session terminal event and a sanitized
 `phase2_execution_shutdown` event. Durable session expiry is the restart/crash backstop.
 
+Production control-plane verification is a separate broker-free synthetic startup job. It
+requires both flags already false, verifies the project-token scope, performs only a
+false-to-false update with deploys skipped, reads both values back, and stores one idempotent
+`phase2_synthetic_shutdown_verified` event. It cannot create a session or construct a broker
+client, and its read-only status is exposed at `/phase2/shutdown-verification`.
+
 ## Multi-underlying safety
 
 The validated engineering universe is SPY and QQQ. Each refresh has a required underlying
@@ -48,5 +54,10 @@ budget failure or any other gate yields NO_TRADE.
 - `AUTONOMOUS_TRADING_ENABLED=false`
 - Existing `SPY260904C00768000`: monitor only; no exit authority
 - Broker submissions during this readiness fix: zero
+
+The official scoring interval ends at `2026-09-04T13:30:00Z`. After the September 3
+market close there is no later U.S. options-market-open interval inside that scoring
+window: the next regular open coincides with the published end. Technical readiness does
+not override that time gate.
 
 SIMULATED PAPER TRADING — NO REAL FUNDS. Results are hypothetical and are not investment advice.

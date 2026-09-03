@@ -33,6 +33,8 @@ phase2_batch_status: dict[str, Any] = {"status": "not_configured", "execution_en
 phase25_status: dict[str, Any] = {"status": "not_configured", "classification": "SYNTHETIC", "broker_calls": 0}
 phase26_status: dict[str, Any] = {"status": "not_configured", "classification": "SYNTHETIC", "broker_calls": 0}
 phase2_activation_status: dict[str, Any] = {"status": "not_configured", "shutdown_verified": False}
+phase27_status: dict[str, Any] = {"status": "not_configured", "classification": "SYNTHETIC",
+                                  "broker_submission_calls": 0}
 
 
 @asynccontextmanager
@@ -49,7 +51,8 @@ async def lifespan(app: FastAPI):
         assert_dry_run(settings)
     elif not (settings.execution_enabled and settings.autonomous_trading_enabled):
         raise RuntimeError("Phase 2 activation flags must change together")
-    elif settings.phase2_dry_run_batch or settings.phase25_synthetic_batch or settings.phase26_synthetic_batch:
+    elif (settings.phase2_dry_run_batch or settings.phase25_synthetic_batch
+          or settings.phase26_synthetic_batch or settings.phase27_synthetic_shutdown_batch):
         raise RuntimeError("Research/synthetic jobs cannot share an execution deployment")
     else:
         async def activate():
@@ -98,6 +101,17 @@ async def lifespan(app: FastAPI):
         except (httpx.HTTPError, RuntimeError, ValueError, TypeError, KeyError) as exc:
             phase26_status.update(status="blocked", error_type=type(exc).__name__)
     bounded = asyncio.create_task(session_verification()) if settings.phase26_synthetic_batch else None
+    async def shutdown_verification():
+        from backend.app.phase2.activation import verify_production_shutdown_control
+        phase27_status["status"] = "running"
+        try:
+            result = await verify_production_shutdown_control(
+                settings, settings.phase27_synthetic_shutdown_batch)
+            phase27_status.update(result)
+        except (httpx.HTTPError, RuntimeError, ValueError, TypeError, KeyError) as exc:
+            phase27_status.update(status="blocked", error_type=type(exc).__name__)
+    shutdown_check = (asyncio.create_task(shutdown_verification())
+                      if settings.phase27_synthetic_shutdown_batch else None)
     yield
     if activation:
         activation.cancel()
@@ -107,6 +121,10 @@ async def lifespan(app: FastAPI):
         bounded.cancel()
         with suppress(asyncio.CancelledError):
             await bounded
+    if shutdown_check:
+        shutdown_check.cancel()
+        with suppress(asyncio.CancelledError):
+            await shutdown_check
     if synthetic:
         synthetic.cancel()
         with suppress(asyncio.CancelledError):
@@ -190,6 +208,12 @@ async def order_dispatch_verification() -> dict[str, Any]:
 async def session_verification_status() -> dict[str, Any]:
     """Synthetic fixtures only; no activation or submission endpoint exists."""
     return phase26_status
+
+
+@app.get("/phase2/shutdown-verification")
+async def shutdown_verification_status() -> dict[str, Any]:
+    """Read-only status for the broker-free, false-only production control proof."""
+    return phase27_status
 
 
 @app.get("/integrations")

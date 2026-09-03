@@ -6,7 +6,11 @@ from uuid import uuid4
 import httpx
 
 from backend.app.config import Settings
-from backend.app.phase2.activation import ActivationSupervisor, RailwayShutdownController
+from backend.app.phase2.activation import (
+    ActivationSupervisor,
+    RailwayShutdownController,
+    verify_production_shutdown_control,
+)
 from backend.app.phase2.execution_sessions import ExecutionSession, SessionState
 
 
@@ -48,7 +52,7 @@ class Shutdown:
     def __init__(self, settings, *, fail=False): self.settings, self.fail, self.calls = settings, fail, []
     async def verify_scope(self): self.calls.append("scope")
     async def configured_flags(self): return True, True
-    async def force_disabled(self):
+    async def force_disabled(self, *, skip_deploys=False):
         self.calls.append("disable")
         self.settings.execution_enabled = self.settings.autonomous_trading_enabled = False
         if self.fail: raise RuntimeError("control plane failed")
@@ -69,6 +73,50 @@ def test_activation_is_server_bound_and_always_verifies_shutdown():
         assert shutdown.calls == ["scope", "disable"] and len(sessions.audit) == 1
         assert settings.execution_enabled is settings.autonomous_trading_enabled is False
         assert row.status == "COMPLETED"
+    asyncio.run(run())
+
+
+def test_synthetic_production_shutdown_is_false_only_and_broker_free():
+    class SyntheticShutdown:
+        def __init__(self): self.calls = []
+        async def verify_scope(self): self.calls.append("scope")
+        async def configured_flags(self): self.calls.append("flags"); return False, False
+        async def force_disabled(self, *, skip_deploys=False):
+            assert skip_deploys is True
+            self.calls.append("false-only")
+
+    class Audit:
+        def __init__(self): self.row = None
+        async def event(self, trace_id, sequence): return self.row
+        async def insert(self, table, row, **kwargs):
+            assert table == "system_events"
+            assert row["kind"] == "phase2_synthetic_shutdown_verified"
+            self.row = row
+            return row
+
+    async def run():
+        settings = Settings()
+        control, audit = SyntheticShutdown(), Audit()
+        result = await verify_production_shutdown_control(
+            settings, "batch-a", controller=control, repository=audit)
+        assert result["broker_submission_calls"] == 0
+        assert result["execution_enabled"] is result["autonomous_trading_enabled"] is False
+        assert control.calls == ["scope", "flags", "false-only", "flags"]
+        repeated = await verify_production_shutdown_control(
+            settings, "batch-a", controller=control, repository=audit)
+        assert repeated == result and control.calls == ["scope", "flags", "false-only", "flags"]
+    asyncio.run(run())
+
+
+def test_synthetic_production_shutdown_rejects_any_enabled_gate():
+    async def run():
+        settings = Settings(execution_enabled=True, phase1_execution_token="x")
+        try:
+            await verify_production_shutdown_control(settings, "batch-a", controller=object(), repository=object())
+        except RuntimeError as exc:
+            assert "both gates disabled" in str(exc)
+        else:
+            raise AssertionError("enabled gate must fail closed")
     asyncio.run(run())
 
 

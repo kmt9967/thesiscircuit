@@ -10,4 +10,9 @@ Evidence in this directory is sanitized and contains no credentials or full acco
 - **PLANNED:** one later bounded PAPER session requires a separate explicit authorization and
   a fresh current-market preflight. This readiness fix does not authorize an order.
 
+The production shutdown check is intentionally **SYNTHETIC**: exact token scope, both gates
+false before and after one false-only mutation, no deploy restart, zero broker submissions,
+and one idempotent sanitized Supabase event. Its result is never represented as activation
+or execution evidence.
+
 Production dry-run observations are added only after deployment and read-only verification.
