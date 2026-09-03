@@ -1,44 +1,45 @@
-# Alpaca AI Trading Agents Hackathon — Current Rules
+# Alpaca AI Trading Agents Hackathon — Final Rules Check
 
-Rechecked on 2026-08-30 PKT from the official Lablab event page, the official Alpaca FAQ posted and pinned by Erika (Alpaca) in LABLAB.AI Discord, and the pinned disclosure.
+Final recheck: September 3, 2026 UTC/PKT. Sources were the full official Lablab event/submission pages, the LABLAB.AI Alpaca official-updates channel and its pins, the general event-updates channel, and the pinned official Alpaca FAQ. No Devpost or unrelated catalog was used.
 
 ## Execution-critical rules
 
-September 3, 2026 final-readiness review: reread the linked official FAQ in full.
-No execution-critical FAQ changes from the earlier September 3 review were found;
-the EOD September 3 versus September 4 09:30 ET wording remains. This does not claim
-a fresh sweep of every Discord message. ThesisCircuit now prioritizes the official
-`alpaca-py` SDK and documents why its deterministic dispatcher remains application-controlled.
-
-September 2, 2026 update: the linked official Alpaca FAQ was reread in full. It now
-clarifies that scoring uses portfolio equity as of end-of-day Thursday September 3,
-including exercises/assignments for options expiring that day, while retaining the
-Friday September 4 9:30 a.m. ET measurement-end language. This does not prohibit the
-September 2 controlled options test. Other execution-critical rules below remain
-unchanged. This recheck was of the official FAQ; no claim is made here that every
-new Discord message was re-inspected.
-
 - PAPER trading only; no real funds are involved.
 - All strategies must incorporate options trading.
-- Build an autonomous agent using Alpaca Trading API and use MCP or CLI; an official SDK is acceptable when the reason is documented and official SDKs are prioritized.
+- Build an autonomous agent using the Alpaca Trading API and use MCP or CLI. The official FAQ clarifies that an official SDK is acceptable when its use is explained and official SDKs are prioritized.
 - The judging account must be a fresh paper account dedicated to the hackathon and start at exactly $100,000.
-- Official competition trading begins Monday, August 31, 2026 at 9:30 a.m. ET.
-- Official P&L measurement ends Friday, September 4, 2026 at 9:30 a.m. ET; Alpaca evaluates total account equity.
-- Do not use a testing account for official P&L measurement.
+- Official competition measurement begins Monday, August 31, 2026 at 9:30 a.m. ET.
+- Alpaca's FAQ states that the measurement window ends Friday, September 4, 2026 at 9:30 a.m. ET (**13:30 UTC**), based on total account equity. It also notes an end-of-day Thursday, September 3 observation so expiration exercises/assignments can be reflected. ThesisCircuit does not infer permission to trade after the stated Friday cutoff.
 - Both Alpaca's free indicative options feed and paid OPRA are permitted. OPRA/Algo Trader Plus is not automatically provided.
-- The official FAQ says there are no restrictions on options strategies. ThesisCircuit nevertheless permits only premium-bounded or otherwise defined-risk strategies.
-- No balance-reset permission was published. ThesisCircuit will not reset the judging account.
+- The FAQ says there are no restrictions on options strategies. ThesisCircuit applies the stricter local policy of premium-bounded or defined-risk positions.
+- No official balance-reset requirement or permission was found. ThesisCircuit did not reset the judging account.
 
-## Submission and judging
+## Submission deadline and requirements
 
-- Judging combines total-account-equity performance with creativity, autonomy, robustness, technology implementation, and presentation.
-- The public event page requires a public GitHub repository, Alpaca paper account ID, project descriptions, cover image, video, slides, and hosted application URL where applicable.
-- A one-page write-up must cover AI logic, risk gates, and Alpaca infrastructure.
-- A UI is not required by Alpaca's FAQ, but ThesisCircuit provides one for auditable evidence.
+The latest official LABLAB.AI event-update announcement states: **Friday, September 4 at 5:00 p.m. CEST / 8:00 a.m. PDT**, which is **15:00 UTC / 20:00 PKT**.
 
-## Current timing discrepancy
+This submission cutoff is separate from Alpaca's 13:30 UTC scoring cutoff. The Lablab event header and localized schedule render inconsistent timezone labels, so ThesisCircuit uses the explicit multi-timezone Discord announcement for the submission deadline and the Alpaca FAQ for the scoring cutoff.
 
-The event-page header currently renders `Sep 4, 8:00 PM PST`, while its event schedule renders `Sep 4, 8:00 PM Pakistan Standard Time`. The official Alpaca FAQ independently defines the trading measurement window in ET. ThesisCircuit uses the FAQ's ET timestamps for order gating and treats the enrolled Lablab submission UI as authoritative for the submission deadline it displays.
+The official page/form requires:
+
+- Public GitHub repository
+- Project title and short/long descriptions
+- Technology/categories and event track
+- Alpaca PAPER account ID
+- One-page write-up covering AI logic, risk gates, and Alpaca infrastructure
+- Cover image, demo video, presentation slides, and hosted application URL where applicable
+
+Judging combines total-account-equity performance with creativity, autonomy, robustness, technology implementation, presentation, and social engagement. A UI is not required by Alpaca's FAQ, but ThesisCircuit provides one for auditable evidence.
+
+## ThesisCircuit compliance
+
+- Dedicated PAPER account began at exactly $100,000.
+- Exactly one options opening order was submitted; no additional or closing order was sent.
+- The only supported execution base URL is `https://paper-api.alpaca.markets`.
+- The official `alpaca-py` SDK is documented and wrapped by typed deterministic application services.
+- Current production flags keep execution and autonomy disabled.
+- Shadow/counterfactual results are labeled and never presented as broker executions.
+- No live brokerage account or live credential was created.
 
 ## Disclosures
 
@@ -47,5 +48,7 @@ Paper trading is hypothetical, involves no actual securities transaction or real
 ## Official sources
 
 - https://lablab.ai/ai-hackathons/alpaca-ai-trading-agents-hackathon
+- https://lablab.ai/ai-hackathons/alpaca-ai-trading-agents-hackathon/teqprotech/submission
 - LABLAB.AI Discord channel `official-updates-alpaca-ai-trading-agents-hackathon`
+- LABLAB.AI Discord channel `updates-alpaca-ai-trading-agents-hackathon`
 - https://docs.google.com/document/d/13XWsMvW3mFm26xGlBLvdzzJ_eZQ33T4ZrP-vd9eat50/edit

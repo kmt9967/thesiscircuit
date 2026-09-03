@@ -1,0 +1,49 @@
+{
+  "classification": "ACTUAL ALPACA PAPER RESULTS",
+  "observed_at_utc": "2026-09-03T22:47:09Z",
+  "environment": {
+    "trading_mode": "paper",
+    "alpaca_paper_trade": true,
+    "allow_live_trading": false,
+    "execution_enabled": false,
+    "autonomous_trading_enabled": false,
+    "live_account_created": false,
+    "real_funds": false
+  },
+  "production": {
+    "railway_health": "ok",
+    "alpaca_status": "connected",
+    "alpaca_account_status": "ACTIVE",
+    "supabase_status": "connected",
+    "vercel_http": 200,
+    "browser_console_errors": 0
+  },
+  "account": {
+    "starting_balance": 100000.0,
+    "cash": 99815.94,
+    "buying_power": 399263.76,
+    "equity": 100397.94,
+    "open_positions": 1,
+    "open_orders": 0,
+    "historical_orders": 1
+  },
+  "verified_order": {
+    "contract": "SPY260904C00768000",
+    "strategy": "one long call",
+    "quantity": 1,
+    "time_in_force": "day",
+    "limit_price": 1.88,
+    "fill_quantity": 1,
+    "average_fill_price": 1.84,
+    "planned_max_premium_risk": 188.0,
+    "additional_orders": 0,
+    "automatic_closing_orders": 0
+  },
+  "final_submission_actions": {
+    "broker_calls": 0,
+    "orders_submitted": 0,
+    "orders_modified": 0,
+    "orders_cancelled": 0,
+    "positions_closed": 0
+  }
+}
