@@ -1,6 +1,6 @@
 # Phase 2.7 final autonomous-readiness fix
 
-Status: implementation complete; production verification must keep both execution flags false.
+Status: implementation and disabled production verification complete.
 
 ## Integration
 
@@ -33,6 +33,13 @@ false-to-false update with deploys skipped, reads both values back, and stores o
 `phase2_synthetic_shutdown_verified` event. It cannot create a session or construct a broker
 client, and its read-only status is exposed at `/phase2/shutdown-verification`.
 
+Production verification batch `phase27-shutdown-20260903-a` completed with the replacement
+project token scoped to the ThesisCircuit `production` environment. Scope validation passed,
+the false-only update was acknowledged and read back, both gates remained false, and broker
+submission calls were zero. The originally surfaced token was revoked before use; exactly one
+replacement remains, and both it and the independent Phase 2 authorization token are stored
+only as masked Railway service variables.
+
 ## Multi-underlying safety
 
 The validated engineering universe is SPY and QQQ. Each refresh has a required underlying
@@ -44,6 +51,10 @@ proposal, contract, immutable intent, session scope and final fresh dispatcher r
 The existing SPY long call continues to trigger the same-underlying concentration veto.
 QQQ support does not force an order: unavailable/stale data, weak signal, poor liquidity,
 budget failure or any other gate yields NO_TRADE.
+
+Fresh production batch `phase27-final-readiness-20260903-b` completed three finite cycles.
+Every cycle evaluated SPY and QQQ independently. Because the U.S. market was closed and the
+available data was stale, both paths returned `NO_TRADE / UNCERTAIN`; no submission path ran.
 
 ## Resting production state
 
