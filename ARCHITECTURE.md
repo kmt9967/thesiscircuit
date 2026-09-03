@@ -1,5 +1,23 @@
 # Architecture
 
+## Phase 2 Part 1
+
+The deployed research path is documented in [Phase 2 architecture](docs/PHASE-2-ARCHITECTURE.md):
+GET-only Alpaca → deterministic features/regime → three competing agents → critic
+→ allocator → independent risk → blocked execution → Supabase counterfactual audit.
+Position recommendations cannot submit closing orders. Phase 1 authorization is retired.
+
+Part 2 adds an independent observation channel for closed-market position/shadow quotes,
+a global database research lease, strict future authorization/exit schemas and offline replay.
+See [Autonomy boundary](docs/AUTONOMY.md). Neither the Phase 2 token checker nor an
+APPROVED risk result grants order capability. Both execution flags remain disabled.
+
+Phase 2.5 adds server-only OrderIntentService, OrderClaimService, OrderReconciliationService
+and PaperOrderDispatcher. Immutable Supabase intents and one-use SUBMITTING claims prevent
+retries from creating duplicate broker requests. UNKNOWN requires reconciliation, not resend.
+The library remains disconnected from production execution triggers. See
+[the durable order protocol](docs/PHASE-2.5-ORDER-DISPATCH.md).
+
 ## Planned multi-agent decision circuit (not activated)
 
 1. Market/research inputs become an immutable `ThesisRequest`.

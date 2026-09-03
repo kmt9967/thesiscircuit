@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import asyncio
 import secrets
+from contextlib import asynccontextmanager, suppress
 from datetime import datetime, timezone
 from typing import Any, Literal
 from uuid import UUID
@@ -26,11 +28,117 @@ from risk.governor import evaluate_thesis
 
 settings = get_settings()
 configured_execution_enabled = settings.execution_enabled
+PHASE1_RETIRED = True
+phase2_batch_status: dict[str, Any] = {"status": "not_configured", "execution_enabled": False}
+phase25_status: dict[str, Any] = {"status": "not_configured", "classification": "SYNTHETIC", "broker_calls": 0}
+phase26_status: dict[str, Any] = {"status": "not_configured", "classification": "SYNTHETIC", "broker_calls": 0}
+phase2_activation_status: dict[str, Any] = {"status": "not_configured", "shutdown_verified": False}
+phase27_status: dict[str, Any] = {"status": "not_configured", "classification": "SYNTHETIC",
+                                  "broker_submission_calls": 0}
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    from backend.app.phase2.data import MultiUnderlyingMarketProvider
+    from backend.app.phase2.engine import assert_dry_run, run_batch
+    from backend.app.phase2.policy import Policy
+    from backend.app.phase2.repository import Phase2Repository
+
+    activation = None
+    if not PHASE1_RETIRED:
+        pass  # Historical Phase 1 route tests provide their own isolated one-shot gate.
+    elif not (settings.execution_enabled or settings.autonomous_trading_enabled):
+        assert_dry_run(settings)
+    elif not (settings.execution_enabled and settings.autonomous_trading_enabled):
+        raise RuntimeError("Phase 2 activation flags must change together")
+    elif (settings.phase2_dry_run_batch or settings.phase25_synthetic_batch
+          or settings.phase26_synthetic_batch or settings.phase27_synthetic_shutdown_batch):
+        raise RuntimeError("Research/synthetic jobs cannot share an execution deployment")
+    else:
+        async def activate():
+            from backend.app.phase2.activation import run_production_activation
+            phase2_activation_status["status"] = "running"
+            result = await run_production_activation(settings)
+            phase2_activation_status.update(result)
+        activation = asyncio.create_task(activate())
+    async def research():
+        phase2_batch_status["status"] = "running"
+        try:
+            async with Phase2Repository(settings) as repository:
+                ids = await run_batch(
+                    MultiUnderlyingMarketProvider(settings), repository, settings,
+                    Policy(emergency_kill=settings.phase2_emergency_kill,
+                           daily_drawdown_fraction=settings.phase2_daily_drawdown_fraction),
+                    settings.phase2_dry_run_batch,
+                    interval=settings.phase2_cycle_seconds,
+                )
+            phase2_batch_status.update(status="completed", cycle_ids=ids)
+        except (httpx.HTTPError, RuntimeError, ValueError, TypeError, KeyError, asyncio.TimeoutError) as exc:
+            # Never log exception bodies/headers/provider payloads containing server credentials.
+            phase2_batch_status.update(status="blocked", error_type=type(exc).__name__)
+
+    task = asyncio.create_task(research()) if settings.phase2_dry_run_batch else None
+    async def synthetic_verification():
+        from backend.app.phase2.order_dry_run import run_synthetic_batch
+        from backend.app.phase2.order_intents import OrderIntentService
+        phase25_status["status"] = "running"
+        try:
+            async with OrderIntentService(settings) as repository:
+                result = await run_synthetic_batch(repository,settings,settings.phase25_synthetic_batch)
+            phase25_status.update(result)
+        except (httpx.HTTPError, RuntimeError, ValueError, TypeError, KeyError) as exc:
+            phase25_status.update(status="blocked", error_type=type(exc).__name__)
+    synthetic = asyncio.create_task(synthetic_verification()) if settings.phase25_synthetic_batch else None
+    async def session_verification():
+        from backend.app.phase2.execution_sessions import ExecutionSessionService
+        from backend.app.phase2.order_intents import OrderIntentService
+        from backend.app.phase2.session_dry_run import run_session_verification
+        phase26_status["status"] = "running"
+        try:
+            async with ExecutionSessionService(settings) as sessions, OrderIntentService(settings) as intents:
+                result = await run_session_verification(sessions,intents,settings,settings.phase26_synthetic_batch)
+            phase26_status.update(result)
+        except (httpx.HTTPError, RuntimeError, ValueError, TypeError, KeyError) as exc:
+            phase26_status.update(status="blocked", error_type=type(exc).__name__)
+    bounded = asyncio.create_task(session_verification()) if settings.phase26_synthetic_batch else None
+    async def shutdown_verification():
+        from backend.app.phase2.activation import verify_production_shutdown_control
+        phase27_status["status"] = "running"
+        try:
+            result = await verify_production_shutdown_control(
+                settings, settings.phase27_synthetic_shutdown_batch)
+            phase27_status.update(result)
+        except (httpx.HTTPError, RuntimeError, ValueError, TypeError, KeyError) as exc:
+            phase27_status.update(status="blocked", error_type=type(exc).__name__)
+    shutdown_check = (asyncio.create_task(shutdown_verification())
+                      if settings.phase27_synthetic_shutdown_batch else None)
+    yield
+    if activation:
+        activation.cancel()
+        with suppress(asyncio.CancelledError):
+            await activation
+    if bounded:
+        bounded.cancel()
+        with suppress(asyncio.CancelledError):
+            await bounded
+    if shutdown_check:
+        shutdown_check.cancel()
+        with suppress(asyncio.CancelledError):
+            await shutdown_check
+    if synthetic:
+        synthetic.cancel()
+        with suppress(asyncio.CancelledError):
+            await synthetic
+    if task:
+        task.cancel()
+        with suppress(asyncio.CancelledError):
+            await task
 
 app = FastAPI(
     title="ThesisCircuit Paper Execution API",
-    version="0.2.0",
-    description="Fail-closed Alpaca PAPER research and one-shot Phase 1 execution.",
+    version="0.3.0",
+    description="Deterministic PAPER options research; Phase 2 Part 1 has no execution authority.",
+    lifespan=lifespan,
 )
 app.add_middleware(
     CORSMiddleware,
@@ -42,6 +150,8 @@ app.add_middleware(
 
 
 async def _execution_enabled() -> bool:
+    if PHASE1_RETIRED:
+        return False
     if not settings.execution_enabled:
         return False
     try:
@@ -74,7 +184,36 @@ async def safety() -> dict[str, object]:
         "order_submission_enabled": enabled,
         "competition_starting_balance": settings.alpaca_competition_starting_balance,
         "one_shot": True,
+        "phase1_authorization_retired": PHASE1_RETIRED,
+        "phase2_mode": "PAPER_BOUNDED" if settings.autonomous_trading_enabled else "DRY_RUN",
+        "phase2_execution_authorized": settings.execution_enabled and settings.autonomous_trading_enabled,
+        "autonomous_trading_enabled": settings.autonomous_trading_enabled,
+        "phase2_dispatch_available": True,
+        "phase25_dispatch_implemented": True,
+        "phase26_bounded_coordinator_implemented": True,
+        "phase26_paper_session_activation_available": bool(settings.railway_project_access_token),
+        "phase2_activation": phase2_activation_status,
+        "manage_existing_position": True,
+        "allow_position_exit": False,
     }
+
+
+@app.get("/phase2/order-dispatch-verification")
+async def order_dispatch_verification() -> dict[str, Any]:
+    """Read-only labelled synthetic verification. Never a submission endpoint."""
+    return phase25_status
+
+
+@app.get("/phase2/session-verification")
+async def session_verification_status() -> dict[str, Any]:
+    """Synthetic fixtures only; no activation or submission endpoint exists."""
+    return phase26_status
+
+
+@app.get("/phase2/shutdown-verification")
+async def shutdown_verification_status() -> dict[str, Any]:
+    """Read-only status for the broker-free, false-only production control proof."""
+    return phase27_status
 
 
 @app.get("/integrations")
@@ -213,6 +352,8 @@ async def phase1_market(symbol: str) -> dict[str, Any]:
 @app.post("/phase1/preflight", response_model=Phase1Preflight)
 @app.post("/phase1/preflight/readiness", response_model=Phase1Preflight)
 async def phase1_preflight() -> Phase1Preflight:
+    if PHASE1_RETIRED:
+        raise HTTPException(status_code=410, detail="Phase 1 preflight retired; historical audit preserved")
     if configured_execution_enabled:
         raise HTTPException(status_code=423, detail="Railway execution must be disabled before readiness")
     try:
@@ -224,6 +365,8 @@ async def phase1_preflight() -> Phase1Preflight:
 
 
 def _authorize_execution(token: str | None) -> None:
+    if PHASE1_RETIRED:
+        raise HTTPException(status_code=410, detail="Phase 1 execution authorization permanently retired")
     if not settings.execution_enabled:
         raise HTTPException(status_code=423, detail="EXECUTION_ENABLED is false")
     if not settings.phase1_execution_token:
@@ -455,3 +598,45 @@ async def phase1_dashboard() -> DashboardState:
         latest_position=latest_position,
         timeline=timeline,
     )
+
+
+@app.get("/phase2/dashboard")
+async def phase2_dashboard() -> dict[str, Any]:
+    from backend.app.phase2.repository import Phase2Repository
+    try:
+        async with Phase2Repository(settings) as repository:
+            rows = await repository.recent("autonomous_cycles", 5)
+            shadows = await repository.recent("shadow_trades")
+            marks = await repository.recent("shadow_marks", 100)
+            dispatcher = await repository.dispatcher_status()
+        return {"mode": "DRY_RUN", "execution_enabled": False, "database_connected": True,
+                "batch_status": phase2_batch_status, "dispatcher":dispatcher,
+                "latest": rows[0]["payload"] if rows else None,
+                "cycles": [{"id": r["id"], "created_at": r["created_at"],
+                            "decision": r["payload"]["decision"]} for r in rows],
+                "shadows": [r["payload"] for r in shadows], "marks": [r["payload"] for r in marks]}
+    except (httpx.HTTPError, ValueError, TypeError, RuntimeError):
+        raise HTTPException(status_code=503, detail="Phase 2 audit unavailable; execution remains disabled")
+
+
+@app.get("/phase2/portfolio")
+async def phase2_portfolio() -> dict[str, Any]:
+    from backend.app.phase2.data import ReadOnlyMarketProvider
+    from backend.app.phase2.features import classify
+    from backend.app.phase2.outcomes import review_positions
+    from backend.app.phase2.policy import Policy
+    try:
+        state = await ReadOnlyMarketProvider(settings).refresh(observations_only=True)
+        now = datetime.now(timezone.utc)
+        return {"classification":"ACTUAL ALPACA PAPER RESULTS", "observed_at":now,
+            "market_open":state.clock.is_open, "account":{
+                "equity":state.account.equity,"cash":state.account.cash,
+                "buying_power":state.account.options_buying_power,
+                "competition_pnl":round(state.account.equity-100000,2),
+                "expected_account_match":state.account.expected_account_match},
+            "total_orders":len(state.orders), "execution_enabled":False,
+            "autonomous_trading_enabled":settings.autonomous_trading_enabled,
+            "positions":review_positions(state,classify(None,now),Policy(),now),
+            "risk_limits":Policy().model_dump(), "data_errors":state.data_errors}
+    except (AlpacaError, httpx.HTTPError, RuntimeError, ValueError, KeyError, TypeError):
+        raise HTTPException(status_code=503, detail="Current broker state unavailable; no execution")

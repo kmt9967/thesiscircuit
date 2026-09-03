@@ -1,0 +1,46 @@
+{
+  "classification": "VERIFIED_SYNTHETIC_ONLY",
+  "observed_at_utc": "2026-09-03T22:20:08Z",
+  "dry_run": {
+    "batch": "phase27-final-readiness-20260903-b",
+    "status": "completed",
+    "cycles": 3,
+    "underlyings": ["SPY", "QQQ"],
+    "decision": "NO_TRADE",
+    "reason": "market closed and data stale; fail closed"
+  },
+  "shutdown_control": {
+    "batch": "phase27-shutdown-20260903-a",
+    "status": "completed",
+    "scope_verified": true,
+    "false_only_write_verified": true,
+    "execution_enabled": false,
+    "autonomous_trading_enabled": false,
+    "broker_submission_calls": 0
+  },
+  "credentials": {
+    "exposed_token_revoked": true,
+    "replacement_project_token_count": 1,
+    "replacement_scope": "production environment",
+    "phase2_execution_token": "configured server-side only",
+    "secret_values_recorded": 0
+  },
+  "integrations": {
+    "alpaca_paper_connected": true,
+    "supabase_connected": true
+  },
+  "broker": {
+    "historical_orders": 1,
+    "new_orders": 0,
+    "positions": 1,
+    "existing_position": "SPY260904C00768000",
+    "position_action_authorized": false
+  },
+  "safety": {
+    "trading_mode": "paper",
+    "alpaca_paper_trade": true,
+    "allow_live_trading": false,
+    "execution_enabled": false,
+    "autonomous_trading_enabled": false
+  }
+}

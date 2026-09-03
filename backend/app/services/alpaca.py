@@ -34,7 +34,8 @@ class AlpacaClient:
         if not settings.alpaca_paper_api_key or not settings.alpaca_paper_api_secret:
             raise AlpacaError("Alpaca PAPER credentials are not configured")
         self.settings = settings
-        self.client = client or httpx.AsyncClient(timeout=10.0)
+        from backend.app.services.alpaca_sdk import OfficialAlpacaAdapter
+        self.client = client or OfficialAlpacaAdapter(settings)
         self._owns_client = client is None
         self.headers = {
             "APCA-API-KEY-ID": settings.alpaca_paper_api_key.get_secret_value(),

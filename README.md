@@ -2,14 +2,35 @@
 
 ThesisCircuit is a paper-only options research project for the Alpaca AI Trading Agents
 Hackathon. Phase 1 proves a single controlled deterministic execution with an auditable
-risk decision. A multi-agent research committee is planned, not yet activated.
+risk decision. Phase 2 Part 1 implements a deterministic three-agent research
+committee with critic, risk vetoes, counterfactual tracking and position recommendations.
+Production rests with both execution flags disabled. A bounded, server-startup-only
+activation path now exists for a separately approved immutable session; there is no
+frontend activation control, and the Phase 1 authorization mechanism is retired.
+
+## Phase 2 research
+
+See [Phase 2 architecture and risk policy](docs/PHASE-2-ARCHITECTURE.md).
+Part 2 validation is described in [Phase 2 readiness](docs/PHASE-2.md) and
+the [one-page Alpaca technical story](docs/ALPACA-TECH-STORY.md). Both execution gates
+remain disabled. [Phase 2.5](docs/PHASE-2.5-ORDER-DISPATCH.md) adds an isolated durable
+order dispatcher, immutable intent claims and restart reconciliation. Its production synthetic
+verification is complete; no current research loop or frontend can activate broker execution.
+[Phase 2.6 Part 1](docs/PHASE-2.6-COORDINATOR.md) adds a finite execution-session
+coordinator and atomic session budgets. Its additive Supabase migration and seven
+production synthetic scenarios are verified. The final readiness layer uses the official
+`alpaca-py` SDK, supports independently evaluated SPY and QQQ states, and forces both
+Railway execution flags off at every terminal session outcome.
+The Strategy Arena, Decision Council and Shadow Desk show recorded real-data
+research, not fabricated performance. Finite operator-configured batches run three
+cycles and stop. The existing SPY paper position remains untouched.
 
 ## Phase 1 controlled execution
 
 Phase 1 adds a deliberately narrow proof path: real Alpaca market data → deterministic
 long-call proposal → disabled-state readiness → fresh enabled-state execution approval
 → one-use submission claim → at most one Alpaca PAPER order → Supabase audit → live
-dashboard. Both stages enforce 18 fail-closed gates. The order path requires a
+dashboard. Both historical stages enforced 18 fail-closed gates. The order path required a
 server-only authorization token, accepts SPY only, limits size to one contract and
 maximum premium loss to $250, and never submits a closing order.
 

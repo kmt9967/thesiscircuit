@@ -11,8 +11,8 @@ def test_health_discloses_disabled_orders() -> None:
 
 def test_execution_disabled_rejects_order_before_external_calls() -> None:
     response = client.post("/phase1/execute")
-    assert response.status_code == 423
-    assert response.json()["detail"] == "EXECUTION_ENABLED is false"
+    assert response.status_code == 410
+    assert "permanently retired" in response.json()["detail"]
 
 
 def test_safe_thesis_is_research_only() -> None:

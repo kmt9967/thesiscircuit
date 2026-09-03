@@ -239,6 +239,7 @@ def test_broker_attempt_always_disables_gate_and_never_reposts(response_kind):
 
 
 def test_route_disables_after_pre_submit_failure(monkeypatch):
+    monkeypatch.setattr(main, "PHASE1_RETIRED", False)  # Historical v1 harness only.
     config = settings()
     monkeypatch.setattr(main, "settings", config)
 
@@ -252,6 +253,7 @@ def test_route_disables_after_pre_submit_failure(monkeypatch):
 
 
 def test_claim_disables_after_restart_even_if_environment_true(monkeypatch):
+    monkeypatch.setattr(main, "PHASE1_RETIRED", False)  # Historical v1 harness only.
     config = settings()
     repository = MemoryAudit()
     repository.events[0] = {"payload": {}}
@@ -263,6 +265,7 @@ def test_claim_disables_after_restart_even_if_environment_true(monkeypatch):
 
 
 def test_complete_route_sequence_submits_only_once(monkeypatch):
+    monkeypatch.setattr(main, "PHASE1_RETIRED", False)  # Historical v1 harness only.
     config = settings(execution_enabled=False)
     repository = MemoryAudit()
     writes = []
@@ -311,6 +314,7 @@ def test_complete_route_sequence_submits_only_once(monkeypatch):
 
 
 def test_readiness_timeout_returns_a_nonempty_safe_error(monkeypatch):
+    monkeypatch.setattr(main, "PHASE1_RETIRED", False)  # Historical v1 harness only.
     repository = MemoryAudit()
 
     async def timeout(*args):
@@ -325,6 +329,7 @@ def test_readiness_timeout_returns_a_nonempty_safe_error(monkeypatch):
 
 
 def test_readiness_requires_environment_disabled_even_after_local_shutdown(monkeypatch):
+    monkeypatch.setattr(main, "PHASE1_RETIRED", False)  # Historical v1 harness only.
     monkeypatch.setattr(main, "configured_execution_enabled", True)
     monkeypatch.setattr(main, "settings", settings(execution_enabled=False))
     with TestClient(main.app) as client:

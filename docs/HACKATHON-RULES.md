@@ -4,6 +4,12 @@ Rechecked on 2026-08-30 PKT from the official Lablab event page, the official Al
 
 ## Execution-critical rules
 
+September 3, 2026 final-readiness review: reread the linked official FAQ in full.
+No execution-critical FAQ changes from the earlier September 3 review were found;
+the EOD September 3 versus September 4 09:30 ET wording remains. This does not claim
+a fresh sweep of every Discord message. ThesisCircuit now prioritizes the official
+`alpaca-py` SDK and documents why its deterministic dispatcher remains application-controlled.
+
 September 2, 2026 update: the linked official Alpaca FAQ was reread in full. It now
 clarifies that scoring uses portfolio equity as of end-of-day Thursday September 3,
 including exercises/assignments for options expiring that day, while retaining the

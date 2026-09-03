@@ -9,6 +9,40 @@ permissions:
   contents: read
 
 jobs:
+  order-protocol-sql:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      PGHOST: localhost
+      PGUSER: postgres
+      PGPASSWORD: postgres
+      PGDATABASE: postgres
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate real PostgreSQL RPC protocol in an isolated empty database
+        run: |
+          psql -v ON_ERROR_STOP=1 -c 'CREATE ROLE anon; CREATE ROLE authenticated; CREATE ROLE service_role BYPASSRLS;'
+          psql -v ON_ERROR_STOP=1 -f database/migrations/003_phase2_dry_run.sql
+          psql -v ON_ERROR_STOP=1 -f database/migrations/004_phase2_cycle_lease.sql
+          psql -v ON_ERROR_STOP=1 -f database/migrations/005_phase2_order_intents.sql
+          psql -v ON_ERROR_STOP=1 -f database/checks/phase25_order_verification.sql
+          python scripts/phase25_sql_concurrency.py
+          psql -v ON_ERROR_STOP=1 -f database/migrations/006_phase2_execution_sessions.sql
+          psql -v ON_ERROR_STOP=1 -f database/migrations/007_phase2_underlying_scope.sql
+          psql -v ON_ERROR_STOP=1 -f database/checks/phase26_session_access.sql
+          python scripts/phase26_sql_sessions.py
+
   backend:
     runs-on: ubuntu-latest
     steps:
