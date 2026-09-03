@@ -4,7 +4,7 @@ Market clock, bars, quotes, account and fills here are test fixtures, not real o
 Only new SYNTHETIC sessions/intents are persisted; historical cycles/positions stay untouched.
 """
 from datetime import datetime, timedelta, timezone
-from uuid import NAMESPACE_URL, uuid5
+from uuid import NAMESPACE_URL, UUID, uuid5
 
 from backend.app.models import AccountSnapshot, MarketClock
 from backend.app.phase2.engine import assert_dry_run
@@ -101,7 +101,6 @@ async def run_session_verification(sessions,intents,settings,batch,clock=None):
                 raise RuntimeError("Synthetic UNKNOWN kill not proven")
             if len(final.reservations)!=expected[1]: raise RuntimeError("Synthetic reservation mismatch")
             for key in final.reservations:
-                from uuid import UUID
                 record=await intents.get(UUID(key))
                 required="UNKNOWN" if case=="unknown_consumes_budget" else "FILLED"
                 if (record.status!=required or record.attempt_count!=1 or record.alpaca_order_id is not None
@@ -130,5 +129,24 @@ async def run_session_verification(sessions,intents,settings,batch,clock=None):
         final=await sessions.control(identity)
         await verify_final(final)
         reports.append({"case":case,"session":final.model_dump(mode="json"),"coordinator":report,"restart_skipped":False})
+    from backend.app.phase2.session_budget_dry_run import run_budget_verification
+    budgets=await run_budget_verification(sessions,intents,settings,batch,synthetic_state,clock)
+    # Exercise recovery of this batch's UNKNOWN fixture using a new worker. No broker
+    # lookup is performed: the deliberately unresolved test result stays UNKNOWN.
+    unknown_id=uuid5(NAMESPACE_URL,f"thesiscircuit:session-synthetic:{batch}:unknown_consumes_budget")
+    unknown_session=await sessions.control(unknown_id)
+    intent_id=UUID(next(iter(unknown_session.reservations)))
+    record=await intents.get(intent_id)
+    replay=sum(e.get("kind")=="RECONCILING" for e in record.events)>=2
+    if not replay:
+        owner=uuid5(unknown_id,"synthetic-recovery-worker")
+        await OrderClaimService(intents).claim(intent_id,owner)
+        await intents.advance(intent_id,owner,"RECONCILING")
+        record=await intents.advance(intent_id,owner,"UNKNOWN",error="RECONCILIATION_REQUIRED")
+    retained=await sessions.control(unknown_id)
+    if record.status!="UNKNOWN" or record.attempt_count!=1 or retained.orders_consumed!=1:
+        raise RuntimeError("Synthetic uncertain-state recovery restored budget")
     return {"status":"completed","classification":"SYNTHETIC","broker_calls":0,
-            "execution_enabled":False,"autonomous_trading_enabled":False,"batch":batch,"cases":reports}
+            "execution_enabled":False,"autonomous_trading_enabled":False,"batch":batch,"cases":reports,
+            "budget_cases":budgets,"unknown_recovery":{"status":record.status,"attempt_count":record.attempt_count,
+                "orders_consumed":retained.orders_consumed,"restart_skipped":replay,"broker_calls":0}}

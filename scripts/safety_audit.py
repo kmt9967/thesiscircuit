@@ -46,7 +46,7 @@ def main() -> None:
     if ('"SUBMIT",preflight' not in session_gate or
         "phase2_advance_order_intent(intent_id,worker,'SUBMITTING'" not in session_sql):
         raise SystemExit("Session budget and irreversible submit transition must share one DB transaction")
-    for name in ("engine.py", "data.py", "order_dry_run.py", "session_dry_run.py", "outcomes.py"):
+    for name in ("engine.py", "data.py", "order_dry_run.py", "session_dry_run.py", "session_budget_dry_run.py", "outcomes.py"):
         source = (ROOT / "backend/app/phase2" / name).read_text(encoding="utf-8")
         if "PaperOrderDispatcher" in source or "order_dispatch import" in source:
             raise SystemExit(f"Dry-run/advisory code imported broker capability: {name}")

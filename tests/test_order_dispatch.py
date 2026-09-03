@@ -51,7 +51,8 @@ class Store:
             if r.owner_id is not None and r.owner_id != owner: raise RuntimeError("Claimed")
             if r.status in {"PENDING", "CLAIMED"} and not self.cycle_valid: raise RuntimeError("Cycle lease lost")
             for other in self.rows.values():
-                if other.id != identity and other.status not in TERMINAL | {"PENDING"}:
+                if (r.document.classification=="PAPER" and other.document.classification=="PAPER"
+                    and other.id != identity and other.status not in TERMINAL | {"PENDING"}):
                     raise RuntimeError("Account dispatch barrier")
             r.owner_id = owner
             if r.status == "PENDING": r.status = "CLAIMED"

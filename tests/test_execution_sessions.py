@@ -78,6 +78,7 @@ class Sessions:
             if s.status!="ACTIVE" or self.now>=s.document.expires_at: raise SessionDenied("SESSION_EXPIRED")
             if str(i.cycle_id) not in s.cycles: raise SessionDenied("SESSION_CYCLE_REQUIRED")
             if action=="RESERVE":
+                if i.action=="CLOSE" and not s.document.allow_position_exit: raise SessionDenied("SESSION_SCOPE")
                 if str(i.id) in s.reservations: return {"allowed":True,"replayed":True}
                 if (s.orders_consumed>=s.document.max_total_orders or
                     (i.action=="OPEN" and s.opening_consumed>=s.document.max_opening_orders) or
@@ -236,6 +237,10 @@ def test_four_synthetic_sessions_and_terminal_restart():
         restart=await run_session_verification(sessions,intents,Settings(),"unit-fixtures",clock=lambda:NOW)
         assert all(r["restart_skipped"] for r in restart["cases"])
         assert events==[s.model_dump_json() for s in sessions.rows.values()]
+        assert [r["budget_winners"] for r in result["budget_cases"]]==[1,2,0]
+        assert all(r["restart_skipped"] for r in restart["budget_cases"])
+        assert result["unknown_recovery"]["orders_consumed"]==1
+        assert restart["unknown_recovery"]["restart_skipped"]
     asyncio.run(run())
 
 
