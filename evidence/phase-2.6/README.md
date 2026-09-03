@@ -40,8 +40,23 @@ consumed one. Every broker-submission counter is zero.
 
 VERIFIED database totals after run: historical orders one; historical research cycles
 six (unchanged); synthetic sessions seven; PAPER execution sessions zero. All actual
-SPY position/execution controls remain unchanged. Production restart replay verification
-will be recorded separately after the evidence deployment.
+SPY position/execution controls remain unchanged.
+
+VERIFIED: [production restart replay](2026-09-03-production-synthetic-restarted.json)
+after deployment ca22765. All seven cases were skipped as already complete; session
+documents, counters, reservations and event arrays match the initial snapshot exactly.
+UNKNOWN recovery was also skipped, retaining attempt count one and budget consumed one.
+
+VERIFIED: [completed production checks](2026-09-03-production-completed.json).
+Railway healthy, Alpaca PAPER and Supabase connected, Vercel HTTP 200 and deployment
+successful. Vercel runtime error/fatal query returned zero entries for the checked
+deployment. [CI run 33709122171](https://github.com/kmt9967/thesiscircuit/actions/runs/33709122171)
+passed all backend, frontend and real PostgreSQL jobs. Backend test count: 234.
+
+Part 2 implementation readiness: YES. Autonomous trading authorization: NO.
+Production still rejects enabled execution at startup; no Phase 2 execution token or
+PAPER session was provisioned. Any later execution requires separate explicit approval
+and fresh account/market/risk checks. No actual order was placed, modified or canceled.
 
 No actual PAPER execution is authorized. Synthetic fixtures, including artificial fills,
 are not actual Alpaca prices, orders or performance. The earlier disabled-production

@@ -1,0 +1,719 @@
+{
+  "status": "completed",
+  "classification": "SYNTHETIC",
+  "broker_calls": 0,
+  "execution_enabled": false,
+  "autonomous_trading_enabled": false,
+  "batch": "phase26-part1-20260903-a",
+  "cases": [
+    {
+      "case": "one_order_budget",
+      "session": {
+        "id": "57217761-02f7-58ff-93be-2b5f773d76c6",
+        "document": {
+          "id": "57217761-02f7-58ff-93be-2b5f773d76c6",
+          "created_at": "2026-09-03T02:47:32.330885Z",
+          "starts_at": "2026-09-03T02:47:32.330885Z",
+          "expires_at": "2026-09-03T03:02:32.330885Z",
+          "paper_mode": true,
+          "classification": "SYNTHETIC",
+          "approval_equity": "100000",
+          "max_opening_orders": 1,
+          "max_closing_orders": 0,
+          "max_total_orders": 1,
+          "max_simultaneous_positions": 3,
+          "max_new_risk": "500",
+          "max_aggregate_premium_risk": "2000",
+          "allowed_underlyings": [
+            "SPY"
+          ],
+          "allowed_strategy_types": [
+            "LONG_CALL",
+            "LONG_PUT"
+          ],
+          "entry_permission": true,
+          "exit_permission": false,
+          "manage_existing_position": true,
+          "allow_position_exit": false,
+          "existing_position_symbols": [
+            "SPY260904C00768000"
+          ],
+          "daily_drawdown_fraction": 0.01,
+          "cadence_seconds": 60,
+          "max_cycles": 1,
+          "max_broker_failures": 2
+        },
+        "status": "COMPLETED",
+        "opening_consumed": 1,
+        "closing_consumed": 0,
+        "orders_consumed": 1,
+        "new_risk_consumed": "185.0",
+        "reservations": {
+          "6c6ad252-2be3-5b56-bcc0-ee43b9d2dc66": {
+            "at": "2026-09-03T02:47:34.571852+00:00",
+            "risk": 185,
+            "action": "OPEN",
+            "cycle_id": "092d069f-5344-5c6f-97eb-078fe77bb1e6"
+          }
+        },
+        "broker_failures": [],
+        "cycles": {
+          "092d069f-5344-5c6f-97eb-078fe77bb1e6": {
+            "at": "2026-09-03T02:47:35.642128+00:00",
+            "status": "ORDER_RECONCILED"
+          }
+        },
+        "next_cycle_at": "2026-09-03T02:48:33.561866Z",
+        "kill_reason": null,
+        "completed_at": "2026-09-03T02:47:35.945750Z",
+        "events": [
+          {
+            "at": "2026-09-03T02:47:32.679984+00:00",
+            "kind": "CREATED_DRAFT",
+            "classification": "SYNTHETIC"
+          },
+          {
+            "at": "2026-09-03T02:47:32.835987+00:00",
+            "kind": "ACTIVATED"
+          },
+          {
+            "at": "2026-09-03T02:47:33.561866+00:00",
+            "kind": "CYCLE_START",
+            "cycle_id": "092d069f-5344-5c6f-97eb-078fe77bb1e6"
+          },
+          {
+            "at": "2026-09-03T02:47:34.571852+00:00",
+            "kind": "BUDGET_CONSUMED",
+            "intent_id": "6c6ad252-2be3-5b56-bcc0-ee43b9d2dc66"
+          },
+          {
+            "at": "2026-09-03T02:47:34.878631+00:00",
+            "kind": "DISPATCH_FENCED",
+            "intent_id": "6c6ad252-2be3-5b56-bcc0-ee43b9d2dc66"
+          },
+          {
+            "at": "2026-09-03T02:47:35.642128+00:00",
+            "kind": "CYCLE_END",
+            "reason": "ORDER_RECONCILED",
+            "cycle_id": "092d069f-5344-5c6f-97eb-078fe77bb1e6"
+          },
+          {
+            "at": "2026-09-03T02:47:35.94575+00:00",
+            "kind": "COMPLETED"
+          }
+        ]
+      },
+      "restart_skipped": true
+    },
+    {
+      "case": "existing_monitor_only",
+      "session": {
+        "id": "5e21603e-585e-573d-bae9-35ec62ce03b3",
+        "document": {
+          "id": "5e21603e-585e-573d-bae9-35ec62ce03b3",
+          "created_at": "2026-09-03T02:47:36.472454Z",
+          "starts_at": "2026-09-03T02:47:36.472454Z",
+          "expires_at": "2026-09-03T03:02:36.472454Z",
+          "paper_mode": true,
+          "classification": "SYNTHETIC",
+          "approval_equity": "100000",
+          "max_opening_orders": 1,
+          "max_closing_orders": 0,
+          "max_total_orders": 1,
+          "max_simultaneous_positions": 3,
+          "max_new_risk": "500",
+          "max_aggregate_premium_risk": "2000",
+          "allowed_underlyings": [
+            "SPY"
+          ],
+          "allowed_strategy_types": [
+            "LONG_CALL",
+            "LONG_PUT"
+          ],
+          "entry_permission": true,
+          "exit_permission": false,
+          "manage_existing_position": true,
+          "allow_position_exit": false,
+          "existing_position_symbols": [
+            "SPY260904C00768000"
+          ],
+          "daily_drawdown_fraction": 0.01,
+          "cadence_seconds": 60,
+          "max_cycles": 1,
+          "max_broker_failures": 2
+        },
+        "status": "COMPLETED",
+        "opening_consumed": 0,
+        "closing_consumed": 0,
+        "orders_consumed": 0,
+        "new_risk_consumed": "0",
+        "reservations": {},
+        "broker_failures": [],
+        "cycles": {
+          "f70876b4-9240-5537-a640-390d2eb14df0": {
+            "at": "2026-09-03T02:47:37.333904+00:00",
+            "status": "NO_TRADE"
+          }
+        },
+        "next_cycle_at": "2026-09-03T02:48:37.180210Z",
+        "kill_reason": null,
+        "completed_at": "2026-09-03T02:47:37.638196Z",
+        "events": [
+          {
+            "at": "2026-09-03T02:47:36.550709+00:00",
+            "kind": "CREATED_DRAFT",
+            "classification": "SYNTHETIC"
+          },
+          {
+            "at": "2026-09-03T02:47:36.704786+00:00",
+            "kind": "ACTIVATED"
+          },
+          {
+            "at": "2026-09-03T02:47:37.18021+00:00",
+            "kind": "CYCLE_START",
+            "cycle_id": "f70876b4-9240-5537-a640-390d2eb14df0"
+          },
+          {
+            "at": "2026-09-03T02:47:37.333904+00:00",
+            "kind": "CYCLE_END",
+            "reason": "NO_TRADE",
+            "cycle_id": "f70876b4-9240-5537-a640-390d2eb14df0"
+          },
+          {
+            "at": "2026-09-03T02:47:37.638196+00:00",
+            "kind": "COMPLETED"
+          }
+        ]
+      },
+      "restart_skipped": true
+    },
+    {
+      "case": "unknown_consumes_budget",
+      "session": {
+        "id": "d440745d-2588-5c9c-af99-a6fedd2a9e13",
+        "document": {
+          "id": "d440745d-2588-5c9c-af99-a6fedd2a9e13",
+          "created_at": "2026-09-03T02:47:38.016755Z",
+          "starts_at": "2026-09-03T02:47:38.016755Z",
+          "expires_at": "2026-09-03T03:02:38.016755Z",
+          "paper_mode": true,
+          "classification": "SYNTHETIC",
+          "approval_equity": "100000",
+          "max_opening_orders": 1,
+          "max_closing_orders": 0,
+          "max_total_orders": 1,
+          "max_simultaneous_positions": 3,
+          "max_new_risk": "500",
+          "max_aggregate_premium_risk": "2000",
+          "allowed_underlyings": [
+            "SPY"
+          ],
+          "allowed_strategy_types": [
+            "LONG_CALL",
+            "LONG_PUT"
+          ],
+          "entry_permission": true,
+          "exit_permission": false,
+          "manage_existing_position": true,
+          "allow_position_exit": false,
+          "existing_position_symbols": [
+            "SPY260904C00768000"
+          ],
+          "daily_drawdown_fraction": 0.01,
+          "cadence_seconds": 60,
+          "max_cycles": 1,
+          "max_broker_failures": 2
+        },
+        "status": "KILLED",
+        "opening_consumed": 1,
+        "closing_consumed": 0,
+        "orders_consumed": 1,
+        "new_risk_consumed": "185.0",
+        "reservations": {
+          "6ab5e05c-90e9-5e62-9974-8b9746653b80": {
+            "at": "2026-09-03T02:47:39.16473+00:00",
+            "risk": 185,
+            "action": "OPEN",
+            "cycle_id": "9614a122-da8b-5f4d-ab9f-3fe1ab4cb1ee"
+          }
+        },
+        "broker_failures": [],
+        "cycles": {
+          "9614a122-da8b-5f4d-ab9f-3fe1ab4cb1ee": {
+            "at": "2026-09-03T02:47:38.710125+00:00",
+            "status": "STARTED"
+          }
+        },
+        "next_cycle_at": "2026-09-03T02:48:38.710125Z",
+        "kill_reason": "UNKNOWN_ORDER",
+        "completed_at": "2026-09-03T02:47:40.085781Z",
+        "events": [
+          {
+            "at": "2026-09-03T02:47:38.09591+00:00",
+            "kind": "CREATED_DRAFT",
+            "classification": "SYNTHETIC"
+          },
+          {
+            "at": "2026-09-03T02:47:38.247164+00:00",
+            "kind": "ACTIVATED"
+          },
+          {
+            "at": "2026-09-03T02:47:38.710125+00:00",
+            "kind": "CYCLE_START",
+            "cycle_id": "9614a122-da8b-5f4d-ab9f-3fe1ab4cb1ee"
+          },
+          {
+            "at": "2026-09-03T02:47:39.16473+00:00",
+            "kind": "BUDGET_CONSUMED",
+            "intent_id": "6ab5e05c-90e9-5e62-9974-8b9746653b80"
+          },
+          {
+            "at": "2026-09-03T02:47:39.470507+00:00",
+            "kind": "DISPATCH_FENCED",
+            "intent_id": "6ab5e05c-90e9-5e62-9974-8b9746653b80"
+          },
+          {
+            "at": "2026-09-03T02:47:40.085781+00:00",
+            "kind": "KILLED",
+            "reason": "UNKNOWN_ORDER"
+          }
+        ]
+      },
+      "restart_skipped": true
+    },
+    {
+      "case": "expired_session",
+      "session": {
+        "id": "ad28ebcb-129c-5446-a11c-cc29b225d3c3",
+        "document": {
+          "id": "ad28ebcb-129c-5446-a11c-cc29b225d3c3",
+          "created_at": "2026-09-03T02:45:40.909385Z",
+          "starts_at": "2026-09-03T02:45:40.909385Z",
+          "expires_at": "2026-09-03T02:47:39.909385Z",
+          "paper_mode": true,
+          "classification": "SYNTHETIC",
+          "approval_equity": "100000",
+          "max_opening_orders": 1,
+          "max_closing_orders": 0,
+          "max_total_orders": 1,
+          "max_simultaneous_positions": 3,
+          "max_new_risk": "500",
+          "max_aggregate_premium_risk": "2000",
+          "allowed_underlyings": [
+            "SPY"
+          ],
+          "allowed_strategy_types": [
+            "LONG_CALL",
+            "LONG_PUT"
+          ],
+          "entry_permission": true,
+          "exit_permission": false,
+          "manage_existing_position": true,
+          "allow_position_exit": false,
+          "existing_position_symbols": [
+            "SPY260904C00768000"
+          ],
+          "daily_drawdown_fraction": 0.01,
+          "cadence_seconds": 60,
+          "max_cycles": 1,
+          "max_broker_failures": 2
+        },
+        "status": "EXPIRED",
+        "opening_consumed": 0,
+        "closing_consumed": 0,
+        "orders_consumed": 0,
+        "new_risk_consumed": "0",
+        "reservations": {},
+        "broker_failures": [],
+        "cycles": {},
+        "next_cycle_at": null,
+        "kill_reason": "SESSION_EXPIRED",
+        "completed_at": "2026-09-03T02:47:41.142615Z",
+        "events": [
+          {
+            "at": "2026-09-03T02:47:40.987603+00:00",
+            "kind": "CREATED_DRAFT",
+            "classification": "SYNTHETIC"
+          },
+          {
+            "at": "2026-09-03T02:47:41.142615+00:00",
+            "kind": "EXPIRED"
+          }
+        ]
+      },
+      "restart_skipped": true
+    }
+  ],
+  "budget_cases": [
+    {
+      "case": "eight_worker_race",
+      "classification": "SYNTHETIC",
+      "broker_calls": 0,
+      "workers": 8,
+      "budget_winners": 1,
+      "restart_skipped": true,
+      "session": {
+        "id": "ec88a6b0-2ab6-5842-bf21-0e35c467b0b5",
+        "document": {
+          "id": "ec88a6b0-2ab6-5842-bf21-0e35c467b0b5",
+          "created_at": "2026-09-03T02:47:41.675101Z",
+          "starts_at": "2026-09-03T02:47:41.675101Z",
+          "expires_at": "2026-09-03T03:02:41.675101Z",
+          "paper_mode": true,
+          "classification": "SYNTHETIC",
+          "approval_equity": "100000",
+          "max_opening_orders": 1,
+          "max_closing_orders": 0,
+          "max_total_orders": 1,
+          "max_simultaneous_positions": 3,
+          "max_new_risk": "500",
+          "max_aggregate_premium_risk": "2000",
+          "allowed_underlyings": [
+            "SPY"
+          ],
+          "allowed_strategy_types": [
+            "LONG_CALL",
+            "LONG_PUT"
+          ],
+          "entry_permission": true,
+          "exit_permission": false,
+          "manage_existing_position": true,
+          "allow_position_exit": false,
+          "existing_position_symbols": [
+            "SPY260904C00768000"
+          ],
+          "daily_drawdown_fraction": 0.01,
+          "cadence_seconds": 60,
+          "max_cycles": 1,
+          "max_broker_failures": 2
+        },
+        "status": "COMPLETED",
+        "opening_consumed": 1,
+        "closing_consumed": 0,
+        "orders_consumed": 1,
+        "new_risk_consumed": "185.0",
+        "reservations": {
+          "d52365ab-3953-5946-96fe-316c41286cf1": {
+            "at": "2026-09-03T02:47:44.90866+00:00",
+            "risk": 185,
+            "action": "OPEN",
+            "cycle_id": "da71ffd6-3382-5de7-9def-0abd6ead5c57"
+          }
+        },
+        "broker_failures": [],
+        "cycles": {
+          "da71ffd6-3382-5de7-9def-0abd6ead5c57": {
+            "at": "2026-09-03T02:47:47.018628+00:00",
+            "status": "NO_TRADE"
+          }
+        },
+        "next_cycle_at": "2026-09-03T02:48:42.074605Z",
+        "kill_reason": null,
+        "completed_at": "2026-09-03T02:47:47.188365Z",
+        "events": [
+          {
+            "at": "2026-09-03T02:47:41.752803+00:00",
+            "kind": "CREATED_DRAFT",
+            "classification": "SYNTHETIC"
+          },
+          {
+            "at": "2026-09-03T02:47:41.906769+00:00",
+            "kind": "ACTIVATED"
+          },
+          {
+            "at": "2026-09-03T02:47:42.074605+00:00",
+            "kind": "CYCLE_START",
+            "cycle_id": "da71ffd6-3382-5de7-9def-0abd6ead5c57"
+          },
+          {
+            "at": "2026-09-03T02:47:44.90866+00:00",
+            "kind": "BUDGET_CONSUMED",
+            "intent_id": "d52365ab-3953-5946-96fe-316c41286cf1"
+          },
+          {
+            "at": "2026-09-03T02:47:47.018628+00:00",
+            "kind": "CYCLE_END",
+            "reason": "NO_TRADE",
+            "cycle_id": "da71ffd6-3382-5de7-9def-0abd6ead5c57"
+          },
+          {
+            "at": "2026-09-03T02:47:47.188365+00:00",
+            "kind": "COMPLETED"
+          }
+        ]
+      },
+      "intents": [
+        {
+          "id": "d52365ab-3953-5946-96fe-316c41286cf1",
+          "status": "REJECTED",
+          "attempt_count": 0,
+          "alpaca_order_id": null
+        },
+        {
+          "id": "ab3a5b4e-683a-506e-b5fa-6a5a27db1eb3",
+          "status": "REJECTED",
+          "attempt_count": 0,
+          "alpaca_order_id": null
+        },
+        {
+          "id": "c035f84e-e358-5f3d-af48-0ad0da5a5950",
+          "status": "REJECTED",
+          "attempt_count": 0,
+          "alpaca_order_id": null
+        },
+        {
+          "id": "f710dcbf-00b6-5cff-9d9c-7f64629459f5",
+          "status": "REJECTED",
+          "attempt_count": 0,
+          "alpaca_order_id": null
+        },
+        {
+          "id": "8ed0828e-8c6a-5172-b417-4a24c9e33a37",
+          "status": "REJECTED",
+          "attempt_count": 0,
+          "alpaca_order_id": null
+        },
+        {
+          "id": "62598336-f4bc-5f8f-93f0-41f911d2d67a",
+          "status": "REJECTED",
+          "attempt_count": 0,
+          "alpaca_order_id": null
+        },
+        {
+          "id": "0ff6987e-2408-5d8e-88fc-4414f9fd7e0a",
+          "status": "REJECTED",
+          "attempt_count": 0,
+          "alpaca_order_id": null
+        },
+        {
+          "id": "4e163f90-3da1-54a9-ba45-e27d132f1afb",
+          "status": "REJECTED",
+          "attempt_count": 0,
+          "alpaca_order_id": null
+        },
+        {
+          "id": "1285242d-e676-5592-8939-06ab1fe309ab",
+          "status": "REJECTED",
+          "attempt_count": 0,
+          "alpaca_order_id": null
+        }
+      ]
+    },
+    {
+      "case": "directional_budgets",
+      "classification": "SYNTHETIC",
+      "broker_calls": 0,
+      "workers": null,
+      "budget_winners": 2,
+      "restart_skipped": true,
+      "session": {
+        "id": "c4e7897c-c052-55fe-be84-dc85737ba662",
+        "document": {
+          "id": "c4e7897c-c052-55fe-be84-dc85737ba662",
+          "created_at": "2026-09-03T02:47:48.874741Z",
+          "starts_at": "2026-09-03T02:47:48.874741Z",
+          "expires_at": "2026-09-03T03:02:48.874741Z",
+          "paper_mode": true,
+          "classification": "SYNTHETIC",
+          "approval_equity": "100000",
+          "max_opening_orders": 1,
+          "max_closing_orders": 1,
+          "max_total_orders": 2,
+          "max_simultaneous_positions": 3,
+          "max_new_risk": "500",
+          "max_aggregate_premium_risk": "2000",
+          "allowed_underlyings": [
+            "SPY"
+          ],
+          "allowed_strategy_types": [
+            "LONG_CALL",
+            "LONG_PUT"
+          ],
+          "entry_permission": true,
+          "exit_permission": true,
+          "manage_existing_position": true,
+          "allow_position_exit": true,
+          "existing_position_symbols": [
+            "SPY260904C00768000"
+          ],
+          "daily_drawdown_fraction": 0.01,
+          "cadence_seconds": 60,
+          "max_cycles": 1,
+          "max_broker_failures": 2
+        },
+        "status": "COMPLETED",
+        "opening_consumed": 1,
+        "closing_consumed": 1,
+        "orders_consumed": 2,
+        "new_risk_consumed": "185.0",
+        "reservations": {
+          "8e2a82f4-0801-526e-9421-1ee6863bc1dc": {
+            "at": "2026-09-03T02:47:50.606174+00:00",
+            "risk": 185,
+            "action": "OPEN",
+            "cycle_id": "44cde77b-81a2-516e-9217-296c24a40fa1"
+          },
+          "a7c01641-3387-5cb5-9b4f-a896248ba893": {
+            "at": "2026-09-03T02:47:50.910892+00:00",
+            "risk": 0,
+            "action": "CLOSE",
+            "cycle_id": "44cde77b-81a2-516e-9217-296c24a40fa1"
+          }
+        },
+        "broker_failures": [],
+        "cycles": {
+          "44cde77b-81a2-516e-9217-296c24a40fa1": {
+            "at": "2026-09-03T02:47:51.797546+00:00",
+            "status": "NO_TRADE"
+          }
+        },
+        "next_cycle_at": "2026-09-03T02:48:49.259854Z",
+        "kill_reason": null,
+        "completed_at": "2026-09-03T02:47:51.949846Z",
+        "events": [
+          {
+            "at": "2026-09-03T02:47:48.956109+00:00",
+            "kind": "CREATED_DRAFT",
+            "classification": "SYNTHETIC"
+          },
+          {
+            "at": "2026-09-03T02:47:49.106397+00:00",
+            "kind": "ACTIVATED"
+          },
+          {
+            "at": "2026-09-03T02:47:49.259854+00:00",
+            "kind": "CYCLE_START",
+            "cycle_id": "44cde77b-81a2-516e-9217-296c24a40fa1"
+          },
+          {
+            "at": "2026-09-03T02:47:50.606174+00:00",
+            "kind": "BUDGET_CONSUMED",
+            "intent_id": "8e2a82f4-0801-526e-9421-1ee6863bc1dc"
+          },
+          {
+            "at": "2026-09-03T02:47:50.910892+00:00",
+            "kind": "BUDGET_CONSUMED",
+            "intent_id": "a7c01641-3387-5cb5-9b4f-a896248ba893"
+          },
+          {
+            "at": "2026-09-03T02:47:51.797546+00:00",
+            "kind": "CYCLE_END",
+            "reason": "NO_TRADE",
+            "cycle_id": "44cde77b-81a2-516e-9217-296c24a40fa1"
+          },
+          {
+            "at": "2026-09-03T02:47:51.949846+00:00",
+            "kind": "COMPLETED"
+          }
+        ]
+      },
+      "intents": [
+        {
+          "id": "8e2a82f4-0801-526e-9421-1ee6863bc1dc",
+          "status": "REJECTED",
+          "attempt_count": 0,
+          "alpaca_order_id": null
+        },
+        {
+          "id": "250f2521-0914-5ee0-af90-87ada3652c12",
+          "status": "REJECTED",
+          "attempt_count": 0,
+          "alpaca_order_id": null
+        },
+        {
+          "id": "a7c01641-3387-5cb5-9b4f-a896248ba893",
+          "status": "REJECTED",
+          "attempt_count": 0,
+          "alpaca_order_id": null
+        },
+        {
+          "id": "5d4d4f68-91ac-58b3-9f7f-9e897c6b1a2c",
+          "status": "REJECTED",
+          "attempt_count": 0,
+          "alpaca_order_id": null
+        }
+      ]
+    },
+    {
+      "case": "expired_budget",
+      "classification": "SYNTHETIC",
+      "broker_calls": 0,
+      "workers": null,
+      "budget_winners": 0,
+      "restart_skipped": true,
+      "session": {
+        "id": "2c5c3cbf-dda6-5221-ac20-90a92c85f03e",
+        "document": {
+          "id": "2c5c3cbf-dda6-5221-ac20-90a92c85f03e",
+          "created_at": "2026-09-03T02:45:52.921236Z",
+          "starts_at": "2026-09-03T02:45:52.921236Z",
+          "expires_at": "2026-09-03T02:47:51.921236Z",
+          "paper_mode": true,
+          "classification": "SYNTHETIC",
+          "approval_equity": "100000",
+          "max_opening_orders": 1,
+          "max_closing_orders": 0,
+          "max_total_orders": 1,
+          "max_simultaneous_positions": 3,
+          "max_new_risk": "500",
+          "max_aggregate_premium_risk": "2000",
+          "allowed_underlyings": [
+            "SPY"
+          ],
+          "allowed_strategy_types": [
+            "LONG_CALL",
+            "LONG_PUT"
+          ],
+          "entry_permission": true,
+          "exit_permission": false,
+          "manage_existing_position": true,
+          "allow_position_exit": false,
+          "existing_position_symbols": [
+            "SPY260904C00768000"
+          ],
+          "daily_drawdown_fraction": 0.01,
+          "cadence_seconds": 60,
+          "max_cycles": 1,
+          "max_broker_failures": 2
+        },
+        "status": "EXPIRED",
+        "opening_consumed": 0,
+        "closing_consumed": 0,
+        "orders_consumed": 0,
+        "new_risk_consumed": "0",
+        "reservations": {},
+        "broker_failures": [],
+        "cycles": {},
+        "next_cycle_at": null,
+        "kill_reason": "SESSION_EXPIRED",
+        "completed_at": "2026-09-03T02:47:53.160141Z",
+        "events": [
+          {
+            "at": "2026-09-03T02:47:53.00846+00:00",
+            "kind": "CREATED_DRAFT",
+            "classification": "SYNTHETIC"
+          },
+          {
+            "at": "2026-09-03T02:47:53.160141+00:00",
+            "kind": "EXPIRED"
+          }
+        ]
+      },
+      "intents": [
+        {
+          "id": "af9830cc-24dd-50ca-88a2-a0604e766a23",
+          "status": "REJECTED",
+          "attempt_count": 0,
+          "alpaca_order_id": null
+        }
+      ]
+    }
+  ],
+  "unknown_recovery": {
+    "status": "UNKNOWN",
+    "attempt_count": 1,
+    "orders_consumed": 1,
+    "restart_skipped": true,
+    "broker_calls": 0
+  }
+}

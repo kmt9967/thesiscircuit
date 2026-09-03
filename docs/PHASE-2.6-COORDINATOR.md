@@ -83,6 +83,8 @@ fixture is SYNTHETIC and grants no rights over the real SPY position. The UNKNOW
 fixture is reclaimed by a new worker and remains UNKNOWN with its one budget slot
 spent. Seven synthetic sessions and zero PAPER sessions exist after the run.
 Completed deterministic batch IDs are skipped on restart without rewriting evidence.
+Production redeployment verified that all seven session documents, counters, reservations
+and event arrays remained identical; the UNKNOWN recovery step also skipped cleanly.
 Read-only output: `/phase2/session-verification`; no public activation/execute route.
 
 Part 2 readiness requires green tests, verified production migration/access controls,
