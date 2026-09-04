@@ -4,6 +4,8 @@
 
 ThesisCircuit is an autonomous options research and paper-execution system built for the Alpaca AI Trading Agents Hackathon. Three deterministic strategy agents independently interpret live Alpaca market and options data, a critic challenges their assumptions, and a fail-closed risk governor decides whether any proposal can advance. Every decision is preserved as an auditable event.
 
+![ThesisCircuit production dashboard](evidence/final-ui/00-lablab-cover.png)
+
 - **Live dashboard:** https://thesiscircuit.vercel.app/
 - **Production API:** https://thesiscircuit-production.up.railway.app/
 - **Public source:** https://github.com/kmt9967/thesiscircuit
@@ -50,7 +52,7 @@ On September 2, 2026, ThesisCircuit proved the full pipeline with one deliberate
 | Maximum planned premium risk | $188 |
 | Additional or closing orders | 0 |
 
-At the final production observation on September 3 at 22:47 UTC, Alpaca reported account equity of **$100,397.94**, cash of **$99,815.94**, one open paper position, no open orders, and one historical order. The dashboard labels this state **ACTUAL ALPACA PAPER RESULTS**. These values are a timestamped paper-account observation, not a promise of final scoring or future performance.
+At the September 4 production freeze, Alpaca reported account equity of **$100,397.94**, cash of **$99,815.94**, one open paper position, no open orders, and one historical order. The dashboard labels this state **ACTUAL ALPACA PAPER RESULTS**. These values are a timestamped paper-account observation, not a promise of final scoring or future performance.
 
 ## What makes it different
 

@@ -1,31 +1,30 @@
-# Final UI Evidence Plan
+# Final UI Production Evidence
 
-The final visual port materially changes the submission story. After the redesign PR is
-merged and the same commit is promoted to production, regenerate these sanitized,
-read-only screenshots from `https://thesiscircuit.vercel.app/`:
+Sanitized screenshots captured on September 4, 2026 from the clean production URL:
+`https://thesiscircuit.vercel.app/` at frozen main commit
+`18c1bc73f198475988e180afd507da9c4a4aa795`.
 
-1. Hero and Alpaca PAPER account overview (desktop and mobile)
-2. Market intelligence and market-regime state
-3. Strategy arena
-4. Decision council
-5. Current position watch
-6. Original verified PAPER trade and audit timeline
-7. Risk engine and shadow desk
-8. Reliability architecture and permanent safety disclosure
+| Artifact | Classification | Evidence |
+| --- | --- | --- |
+| `00-lablab-cover.png` | **VERIFIED** | Recommended 16:9 Lablab cover: hero, PAPER state, real account card |
+| `01-hero-account.png` | **VERIFIED** | 1920×1080 hero, PAPER status, broker-backed account metrics |
+| `02-strategy-arena.png` | **VERIFIED** | Trend, Range, Defensive production decisions |
+| `03-decision-council.png` | **VERIFIED** | Critic, MetaAllocator, final NO TRADE decision |
+| `04-position-watch.png` | **VERIFIED** | Existing Alpaca PAPER SPY option position and recommendation |
+| `05-original-paper-trade.png` | **VERIFIED** | Historical order, $1.84 fill, and audit timeline |
+| `06-risk-engine.png` | **VERIFIED** | Deterministic pass/block gates and disabled dispatch |
+| `07-shadow-desk.png` | **VERIFIED** | Counterfactual record clearly marked never executed |
+| `08-reliability.png` | **VERIFIED** | Lease, durable intent, atomic claim, reconciliation, sessions, shutdown |
+| `09-mobile-dashboard.png` | **VERIFIED** | 390×844 production dashboard |
+| `10-mobile-drawer.png` | **VERIFIED** | Full-height mobile navigation and PAPER disclosure |
 
-Each capture must retain the visible PAPER/no-real-funds disclosure and omit browser
-profiles, credentials, full sensitive account identifiers, and developer tooling. Values
-must come from the production Railway API; prototype and placeholder values are not
-eligible evidence.
+These images contain no API keys, service credentials, passwords, full sensitive account
+identifiers, or admin screens. Values are production reads, not prototype fixtures.
 
-## Classification
+Responsive production QA passed at 430, 390, 360, and 320 CSS pixels with no page-level
+horizontal overflow or clipped cards. Drawer scrolling, accordions, X, Escape, backdrop,
+and body scroll restoration passed. Browser console severe errors: **0**.
 
-- **PLANNED:** production screenshots above, pending merge and production promotion.
-- **VERIFIED:** local responsive QA at 1920, 1440, 1366, 1280, 1024, 768, 430,
-  390, 360, and 320 CSS pixels, using read-only production API responses.
-- **CONFIGURED:** same-origin `/backend/*` proxy to Railway with no browser-exposed
-  credential and no write controls.
-
-The existing `evidence/final-submission/production-desktop.png` and
-`production-arena.png` remain valid historical evidence for their recorded version, but
-they should not be used as the final visual submission after this redesign ships.
+The older `evidence/final-submission/production-desktop.png` and
+`production-arena.png` remain historical evidence only; use this directory for the final
+Lablab visual submission.

@@ -12,8 +12,8 @@
 - `phase-1/2026-09-02-completed-execution.json` — VERIFIED actual one-order execution,
   fill, position snapshot, audit, and disabled-state result; supersedes the pending status.
 - `phase-1/2026-09-02-completion-report.md` — final validation and remaining boundaries.
-- `final-ui/README.md` — final submission screenshot regeneration plan for the
-  Google AI Studio visual port. Preview captures are not classified as production evidence.
+- `final-ui/README.md` — VERIFIED final dark-UI production screenshots, responsive QA,
+  and the recommended Lablab cover captured from the clean production URL.
 
 Classifications: VERIFIED means observed directly; CONFIGURED means a setting was confirmed; PLANNED means blocked by the official trading window or another explicit prerequisite.
 # Phase 2.5

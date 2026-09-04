@@ -1,41 +1,127 @@
-# ThesisCircuit Demo Script (3–5 minutes)
+# ThesisCircuit Final Demo Script
 
-## 0:00–0:25 — Hook
+Target duration: **4 minutes 30 seconds**. Record the production application at
+`https://thesiscircuit.vercel.app/` at 1920×1080, 100% browser zoom.
 
-“Most trading-agent demos celebrate every trade. ThesisCircuit is built around a harder standard: AI strategies compete, risk decides, and sometimes the best trade is no trade.”
+## Browser preparation
 
-Show the dashboard hero and the permanent PAPER disclosure. Point out that the values are live Alpaca paper-account observations, not mock data.
+Open exactly these tabs before recording:
 
-## 0:25–1:05 — Agent arena
+1. `https://thesiscircuit.vercel.app/` — presentation tab; clean browser chrome,
+   notifications/bookmarks hidden.
+2. `https://github.com/kmt9967/thesiscircuit` — optional closing proof; do not spend
+   demo time browsing source.
 
-Scroll to Strategy Arena. Explain that Trend, Range, and Defensive evaluate the same timestamped Alpaca snapshot independently. Show their decisions and the Council result. Emphasize that a critic actively searches for stale data, weak liquidity, disagreement, and unsupported assumptions.
+Do not open Alpaca, Railway, Supabase, Vercel settings, environment variables, or any
+credential screen. Refresh the production app once before recording and confirm the
+account panel has finished loading.
 
-## 1:05–1:40 — Risk owns authority
+## Recording walkthrough and narration
 
-Open the risk/decision section. Explain that prose cannot authorize an order. Deterministic gates check PAPER mode and endpoint, account state, market window, freshness, tradability, liquidity, buying power, maximum loss, conflicts, unique order references, session expiry, and budgets. Show a NO TRADE result and its objections.
+### 0:00–0:25 — Hero and problem
 
-## 1:40–2:30 — Actual Alpaca PAPER proof
+**Show:** top of the production dashboard, including the PAPER badges and account card.
 
-Show the account and order cards. State the exact verified result: one `SPY260904C00768000` long call, quantity one, DAY limit $1.88, filled by Alpaca PAPER at $1.84, with $188 planned maximum premium risk. Show the actual position and audit timeline. Clarify that no second or closing order was submitted.
+**Say:** “Most trading-agent demos celebrate every trade. ThesisCircuit uses a harder
+standard: AI strategies compete, risk decides, and sometimes the best trade is no trade.
+Every number on this screen comes from the production PAPER pipeline.”
 
-## 2:30–3:20 — Reliability under failure
+Pause briefly on the permanent PAPER/no-real-funds disclosure so the premise is clear
+without audio.
 
-Use the architecture slide or repository diagram. Explain that Supabase persists the intent before broker contact; an atomic claim allows one worker; timeouts reconcile by `client_order_id` before retry; cycle locks expire after crashes; UNKNOWN broker states consume budget conservatively. Mention the eight-worker race produced exactly one winner.
+### 0:25–0:50 — Competition account
 
-## 3:20–4:00 — Bounded autonomy and shutdown
+**Show:** Competition Account card.
 
-Show system status. Execution and autonomous trading are both disabled. Explain that a bounded server-only session has an expiry and atomic opening/closing/total budgets, and terminal outcomes force both flags off. Synthetic production activation and shutdown generated zero broker calls.
+**Say:** “This dedicated Alpaca PAPER account started at $100,000. The dashboard reads
+the current equity, cash, buying power, position count, and one historical order directly
+from the backend.”
 
-## 4:00–4:25 — Close
+Do not narrate the current equity, cash, buying power, P&L, market status, or observation
+time as fixed numbers; they are live/read-time values and may change.
 
-“ThesisCircuit does not ask judges to trust an agent’s confidence. It provides the data, debate, vetoes, broker result, and replay needed to verify every decision.”
+### 0:50–1:25 — Strategy Arena
 
-End on the dashboard disclosure: “SIMULATED PAPER TRADING — NO REAL FUNDS. Results are hypothetical and are not investment advice.”
+**Navigate:** Strategy → Strategy Arena.
+
+**Say:** “Trend, Range, and Defensive independently evaluate the same timestamped Alpaca
+snapshot. Each produces a typed thesis, confidence heuristic, risk budget, and reasons not
+to trade. Today all three preserve cash because the recorded evidence does not qualify.”
+
+### 1:25–1:55 — Decision Council
+
+**Navigate:** Strategy → Decision Council.
+
+**Say:** “The Critic attacks each thesis. The MetaAllocator compares the surviving cases,
+and the deterministic Risk Officer owns the final vote. NO TRADE is a successful,
+auditable outcome—not a missing result.”
+
+### 1:55–2:30 — Actual Alpaca PAPER proof
+
+**Navigate:** Positions → Original Paper Trade.
+
+**Say:** “The system also proved the complete execution path once. Alpaca PAPER accepted
+one buy-to-open DAY limit order for one SPY September 4, 2026 $768 call. The limit was
+$1.88, the actual fill was $1.84, and planned premium risk was $188. The timeline shows
+readiness, approval, submission, broker reconciliation, and execution shutdown.”
+
+These historical values are fixed evidence. State clearly that no additional or closing
+order was submitted.
+
+### 2:30–2:55 — Position Watch
+
+**Navigate:** Positions → Current Position.
+
+**Say:** “The existing PAPER position is rendered from Alpaca state. Entry is historical;
+current value, unrealized P&L, time-to-expiry, quote freshness, and research recommendation
+are read-time values. Closing authority remains disabled.”
+
+Do not hardcode the current mark, position value, P&L, Greeks, recommendation, or time to
+expiry in narration.
+
+### 2:55–3:20 — Risk Engine
+
+**Navigate:** Strategy → Risk Engine.
+
+**Say:** “Agent prose cannot authorize an order. Deterministic gates verify the PAPER
+endpoint, live-trading block, account state, official window, freshness, liquidity, buying
+power, bounded loss, conflicts, duplicate prevention, cooldown, and drawdown. Any blocked
+or unknown condition fails closed.”
+
+### 3:20–3:45 — Shadow Desk
+
+**Navigate:** Research → Shadow Desk.
+
+**Say:** “Rejected proposals are still useful evidence. The Shadow Desk measures later
+counterfactual outcomes without claiming an Alpaca fill, executable price, or real P&L.
+This lets us evaluate decision regret while keeping simulated research separate.”
+
+### 3:45–4:10 — Reliability Architecture
+
+**Navigate:** Research → Architecture.
+
+**Say:** “Cycle leases prevent overlap. Durable intents are persisted before broker
+contact. Atomic claims permit one worker, uncertain responses reconcile before retry, and
+bounded sessions enforce expiry and order budgets. Terminal outcomes force execution off.”
+
+Point to the production service strip: Alpaca PAPER connected, Supabase healthy, Risk
+Engine active, execution disabled, live trading blocked.
+
+### 4:10–4:30 — Close
+
+**Show:** footer disclosure, then return to Overview.
+
+**Say:** “ThesisCircuit does not ask judges to trust an agent’s confidence. It provides the
+data, debate, vetoes, broker result, and replay needed to verify every decision. Simulated
+PAPER trading only—no real funds.”
 
 ## Recording checklist
 
-- Hide bookmarks, notifications, account identifiers, and developer secrets.
-- Record the production URL, not localhost.
-- Keep browser zoom at 100% and text legible.
-- Do not show Railway, Supabase, Alpaca credentials, or environment-variable screens.
-- Do not imply shadow/counterfactual records were executed.
+- Resolution: 1920×1080, 30 fps or higher; export 1080p.
+- Browser zoom: 100%; pointer visible; deliberate scrolling with brief pauses.
+- Expected duration: 4:20–4:40.
+- Hide bookmarks, notifications, personal profile details, and unrelated tabs.
+- Never show credentials, environment variables, full account identifiers, or admin UIs.
+- Do not claim current P&L is guaranteed, final judging P&L, or a live-money result.
+- Do not describe shadow records as submitted orders.
+- Confirm both execution statuses visibly read disabled before recording.

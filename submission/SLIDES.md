@@ -1,4 +1,7 @@
-# ThesisCircuit — 10-Slide Deck Content
+# ThesisCircuit — Final 10-Slide Deck
+
+Use the final dark production screenshots in `evidence/final-ui/`. Keep the PAPER/no-real-
+funds disclosure visible on every slide that presents broker values.
 
 ## Slide 1 — ThesisCircuit
 
@@ -6,82 +9,98 @@
 
 Alpaca AI Trading Agents Hackathon · PAPER options only
 
-Visual: production hero screenshot.
+Visual: `evidence/final-ui/00-lablab-cover.png`
 
 ## Slide 2 — The problem
 
-- Trading-agent demos often collapse research, persuasion, risk, and execution into one opaque step.
-- A retry or restart can duplicate an order.
-- “No trade” decisions disappear, making risk quality impossible to judge.
-- Broker claims and displayed performance are difficult to audit.
+- Trading-agent demos often collapse research, persuasion, risk, and execution.
+- Retries and restarts can duplicate orders.
+- Rejections disappear, so risk quality cannot be evaluated.
+- Broker and performance claims are difficult to audit.
 
-## Slide 3 — The ThesisCircuit answer
+## Slide 3 — The solution
 
 - Independent Trend, Range, and Defensive agents
-- Decision Council plus adversarial Critic
-- Deterministic, non-overridable risk governor
+- Decision Council and adversarial Critic
+- Deterministic, non-overridable Risk Officer
 - Durable intent and bounded execution coordinator
-- Supabase evidence trail and live dashboard
+- Supabase evidence trail and production dashboard
 
-## Slide 4 — Decision architecture
+Visual: `evidence/final-ui/02-strategy-arena.png`
 
-Visual: Alpaca data → Strategy Arena → Council → Critic → Risk → durable intent → bounded session → Alpaca PAPER, with all stages writing to Supabase.
+## Slide 4 — Architecture
 
-Key message: generation and authorization are deliberately separated.
+Alpaca data → Strategy Arena → Council → Critic → Risk → durable intent → bounded
+session → Alpaca PAPER, with decision and execution evidence persisted in Supabase.
 
-## Slide 5 — Risk owns the final vote
+Key message: generation, authorization, and broker dispatch are separate boundaries.
 
-- Exact paper endpoint and live-flag rejection
-- Freshness, tradability, liquidity, market-window checks
-- Buying power and premium-bounded maximum loss
-- Position/order conflicts and unique client references
-- Expiring sessions and atomic budgets
-- UNKNOWN states fail closed
+Visual: `evidence/final-ui/08-reliability.png`
 
-## Slide 6 — One actual PAPER proof
+## Slide 5 — Strategy Arena
 
-- `SPY260904C00768000`
-- Buy to open 1 long call
+- Same timestamped market state, three independent theses
+- Typed confidence, rationale, risk budget, and objections
+- Capital remains in cash when no candidate qualifies
+- Scores are evidence-weighted and sparse-data-aware
+
+Visual: `evidence/final-ui/02-strategy-arena.png`
+
+## Slide 6 — Decision Council and Risk
+
+- Critic challenges momentum extrapolation and concentration
+- MetaAllocator may select a thesis or preserve cash
+- Risk verifies PAPER endpoint, freshness, liquidity, buying power, bounded loss,
+  conflicts, duplicates, cooldown, and drawdown
+- Unknown or failed checks block dispatch
+
+Visuals: `evidence/final-ui/03-decision-council.png` and
+`evidence/final-ui/06-risk-engine.png`
+
+## Slide 7 — One actual Alpaca PAPER execution
+
+- `SPY260904C00768000` — SPY Sep 4, 2026 $768 call
+- Buy to open 1 contract
 - DAY limit $1.88
-- Alpaca fill: 1 at $1.84
+- Alpaca PAPER fill: 1 at $1.84
 - Planned maximum premium risk: $188
-- Additional/closing orders: 0
+- Additional or closing orders: 0
 
-Label prominently: **ACTUAL ALPACA PAPER RESULT**.
+Label: **ACTUAL ALPACA PAPER RESULT — SIMULATED FUNDS**
 
-## Slide 7 — Reliability, not happy-path theater
+Visual: `evidence/final-ui/05-original-paper-trade.png`
 
-- Intent persisted before broker contact
-- Eight-worker claim race: exactly one winner
-- Reconcile by `client_order_id` before retry
-- Restart and stale-lock recovery
-- Conservative budget accounting for uncertain broker state
-- Terminal shutdown forces both execution flags false
+## Slide 8 — Shadow trades and decision regret
 
-## Slide 8 — NO TRADE is a product feature
+- Rejected ideas remain measurable evidence
+- Later bid marks are counterfactual, never broker executions
+- No fill, fee, slippage, or executable-return claim is invented
+- NO TRADE quality can improve over time
 
-- Critic objections remain visible
-- Risk rejections are structured and replayable
-- Shadow/counterfactual ideas are clearly separated from broker orders
-- The dashboard never fabricates P&L or fills
+Visual: `evidence/final-ui/07-shadow-desk.png`
 
-Visual: Strategy Arena / Critic screenshot.
+## Slide 9 — Reliability as a product feature
 
-## Slide 9 — Verified production stack
+- Cycle lease and stale-lock recovery
+- Persist-before-dispatch durable intent
+- Eight-worker claim/budget races: exactly one winner
+- Reconciliation by `client_order_id` before retry
+- Conservative UNKNOWN-state budget accounting
+- Expiring bounded sessions and terminal shutdown
 
-- Alpaca PAPER + official `alpaca-py`
-- FastAPI / Pydantic on Railway
-- Supabase PostgreSQL with RLS and server-only functions
-- Next.js / TypeScript on Vercel
-- 256 backend tests plus frontend, security, and safety checks
+Visual: `evidence/final-ui/08-reliability.png`
 
-Current posture: execution OFF, autonomy OFF, live trading prohibited.
+## Slide 10 — Results and thesis
 
-## Slide 10 — The thesis
+**Autonomy is credible only when refusal, recovery, and shutdown are as engineered as
+execution.**
 
-**Autonomy is credible only when refusal, recovery, and shutdown are as engineered as execution.**
-
-- Public code: https://github.com/kmt9967/thesiscircuit
+- One verified PAPER opening order; zero additional/closing orders
+- Auditable NO TRADE decisions and shadow research
+- 256 backend tests plus frontend, SQL protocol, security, and paper-safety checks
+- Execution OFF · autonomy OFF · live trading prohibited
+- GitHub: https://github.com/kmt9967/thesiscircuit
 - Live demo: https://thesiscircuit.vercel.app/
 
-Footer: SIMULATED PAPER TRADING — NO REAL FUNDS. Hypothetical results; not investment advice.
+Footer: SIMULATED PAPER TRADING — NO REAL FUNDS. Hypothetical results; not investment
+advice.

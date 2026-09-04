@@ -59,5 +59,14 @@ SIMULATED PAPER TRADING — NO REAL FUNDS. Results are hypothetical and are not 
 
 ## Media
 
-- Cover candidate: `evidence/final-submission/production-desktop.png`
-- Additional screenshot: `evidence/final-submission/production-arena.png`
+- Cover: `evidence/final-ui/00-lablab-cover.png`
+- Hero/account: `evidence/final-ui/01-hero-account.png`
+- Strategy Arena: `evidence/final-ui/02-strategy-arena.png`
+- Decision Council: `evidence/final-ui/03-decision-council.png`
+- Position Watch: `evidence/final-ui/04-position-watch.png`
+- Verified PAPER trade: `evidence/final-ui/05-original-paper-trade.png`
+- Risk Engine: `evidence/final-ui/06-risk-engine.png`
+- Shadow Desk: `evidence/final-ui/07-shadow-desk.png`
+- Reliability: `evidence/final-ui/08-reliability.png`
+- Mobile dashboard/navigation: `evidence/final-ui/09-mobile-dashboard.png` and
+  `evidence/final-ui/10-mobile-drawer.png`
