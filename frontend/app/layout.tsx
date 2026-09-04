@@ -1,19 +1,20 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { JetBrains_Mono, Plus_Jakarta_Sans, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 
-const geist = Geist({ subsets: ["latin"], variable: "--font-geist" });
-const geistMono = Geist_Mono({ subsets: ["latin"], variable: "--font-geist-mono" });
+const jakarta = Plus_Jakarta_Sans({ subsets: ["latin"], variable: "--font-sans" });
+const space = Space_Grotesk({ subsets: ["latin"], variable: "--font-display" });
+const mono = JetBrains_Mono({ subsets: ["latin"], variable: "--font-mono" });
 
 export const metadata: Metadata = {
-  title: "ThesisCircuit — Paper-only options agents",
-  description: "Auditable AI options theses, deterministic risk vetoes, and replayable evidence.",
+  title: "ThesisCircuit — Autonomous options intelligence",
+  description: "Competing AI theses, deterministic risk vetoes, and verified Alpaca PAPER evidence.",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en">
-      <body suppressHydrationWarning className={`${geist.variable} ${geistMono.variable}`}>
+      <body suppressHydrationWarning className={`${jakarta.variable} ${space.variable} ${mono.variable}`}>
         {children}
       </body>
     </html>

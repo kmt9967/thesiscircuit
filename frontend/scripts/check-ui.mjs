@@ -2,33 +2,60 @@ import { readFileSync } from "node:fs";
 import { strict as assert } from "node:assert";
 
 const page = readFileSync(new URL("../app/page.tsx", import.meta.url), "utf8");
-const dashboard = readFileSync(new URL("../app/phase1-dashboard.tsx", import.meta.url), "utf8");
+const command = readFileSync(new URL("../app/command-center.tsx", import.meta.url), "utf8");
+const navigation = readFileSync(new URL("../app/navigation.tsx", import.meta.url), "utf8");
+const styles = readFileSync(new URL("../app/command-center.css", import.meta.url), "utf8");
+const globals = readFileSync(new URL("../app/globals.css", import.meta.url), "utf8");
 
-assert.match(page, /SIMULATED PAPER TRADING — NO REAL FUNDS/);
-assert.match(page, /not investment advice/);
-assert.match(dashboard, /execution_enabled \? "ENABLED" : "DISABLED"/);
-assert.match(dashboard, /No Alpaca order/);
-assert.match(dashboard, /No paper position/);
-assert.match(dashboard, /No executed proposal/);
-assert.match(dashboard, /Readiness approval is not an executed trade/);
-assert.doesNotMatch(dashboard, /The official trading window has not opened/);
-assert.doesNotMatch(dashboard, /Zero opening orders have been submitted/);
-assert.match(dashboard, /Reconciled position snapshot at/);
-assert.match(dashboard, /Account read at/);
-assert.match(dashboard, /eventTime\(event\)/);
+assert.match(page, /CommandCenter/);
+assert.match(page, /command-center\.css/);
 
-console.log("Phase 1 frontend safety and empty-state checks passed.");
-
-const research = readFileSync(new URL("../app/phase2-dashboard.tsx", import.meta.url), "utf8");
-for (const required of ["COUNTERFACTUAL", "EXECUTION DISABLED", "Strategy arena", "Decision council", "Shadow desk", "Position watch", "NO TRADE", "Not measured", "No completed Phase 2 cycle", "not a live price stream", "NOT EXECUTED", "interim, unscored"]) {
-  assert.ok(research.includes(required), `Missing Phase 2 disclosure/state: ${required}`);
+for (const required of [
+  "SIMULATED PAPER TRADING — NO REAL FUNDS",
+  "Results are hypothetical and are not investment advice",
+  "PAPER ONLY",
+  "EXECUTION DISABLED",
+  "AUTONOMY DISABLED",
+  "LIVE BLOCKED",
+  "ACTUAL ALPACA PAPER RESULTS",
+  "Market intelligence",
+  "Market regime",
+  "Strategy arena",
+  "Decision council",
+  "Position watch",
+  "The original paper trade",
+  "Risk engine",
+  "Shadow desk",
+  "Agent leaderboard",
+  "Autonomous cycles",
+  "Research audit",
+  "Reliability architecture",
+]) {
+  assert.ok(command.includes(required), `Missing required production UI state: ${required}`);
 }
-assert.doesNotMatch(research, /PHASE1_EXECUTION_TOKEN|PHASE2_EXECUTION_TOKEN|SUPABASE_SERVICE|method:\s*["']POST/);
-assert.match(research, /phase2\/dashboard/);
-assert.match(research, /AbortController/);
-assert.match(page, /Phase2Dashboard/);
-console.log("Phase 2 research, counterfactual, missing-data and no-execution UI checks passed.");
-for (const label of ["ACTUAL ALPACA PAPER RESULTS", "Competition P&", "AUTONOMOUS TRADING DISABLED",
-  "STALE / not eligible for execution", "phase2/portfolio", "No account values are invented"]) {
-  assert.ok(research.includes(label), `Missing Part 2 state: ${label}`);
+
+for (const endpoint of ["/phase1/dashboard", "/phase2/dashboard", "/phase2/portfolio"]) {
+  assert.ok(command.includes(endpoint), `Missing real backend integration: ${endpoint}`);
 }
+assert.match(command, /const apiBase = "\/backend"/);
+
+assert.match(command, /Promise\.allSettled/);
+assert.match(command, /No account value is invented/);
+assert.match(command, /No reconciled Alpaca order/);
+assert.match(command, /An absent risk decision never implies approval/);
+assert.match(command, /NEVER SENT TO ALPACA/);
+assert.doesNotMatch(command, /PHASE1_EXECUTION_TOKEN|PHASE2_EXECUTION_TOKEN|SUPABASE_SERVICE|method:\s*["']POST/);
+assert.doesNotMatch(command, /mockData|100366\.94|mockAccountMetrics/);
+
+for (const group of ["Overview", "Intelligence", "Strategy", "Positions", "Research"]) {
+  assert.ok(navigation.includes(group), `Missing navigation group: ${group}`);
+}
+assert.match(navigation, /role="dialog"/);
+assert.match(navigation, /aria-modal="true"/);
+assert.match(navigation, /document\.body\.style\.overflow = "hidden"/);
+assert.match(navigation, /event\.key === "Escape"/);
+assert.match(styles, /100dvh/);
+assert.match(styles, /@media\(max-width:900px\)/);
+assert.match(globals, /@media \(prefers-reduced-motion: reduce\)/);
+
+console.log("Final UI port safety, real-data, navigation, responsive, and disclosure checks passed.");
