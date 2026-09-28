@@ -7,8 +7,9 @@ ThesisCircuit is an autonomous options research and paper-execution system built
 ![ThesisCircuit production dashboard](evidence/final-ui/00-lablab-cover.png)
 
 - **Live dashboard:** https://thesiscircuit.vercel.app/
-- **Production API:** https://thesiscircuit-production.up.railway.app/
+- **Production API:** https://thesiscircuit-production.up.railway.app/ (status note: the Railway deployment returned "Application not found" when checked on 2026-09-29; the hackathon evidence in this repository is unchanged)
 - **Public source:** https://github.com/kmt9967/thesiscircuit
+- **Portfolio case study:** https://talalkhawaja.com/projects/thesiscircuit
 
 ## Why it matters
 
